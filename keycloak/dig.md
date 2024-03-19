@@ -8,7 +8,7 @@
 4. 위의 설정을 위하여 Spring에서는 Spring Security 보안 설정을 추가할 것이고, 어떤 리소스에 어떤 권한이 필요한지를 명세합니다. 
 
 ### Spring 서버의 토큰 검증 과정 
-```Mermaid
+```mermaid
 sequenceDiagram
     participant User
     participant Client as Spring Application
