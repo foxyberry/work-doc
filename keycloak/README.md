@@ -1,13 +1,14 @@
-# Spring 인증 설정과 keycloak 연동 
-## 개요
-이번 문서에서는 Spring 환경에서 인증 절차를 추가하고, keycloak을 인증 서버로 사용하는 연동을 설명합니다.  
+# Integration of Authentication in Spring with Keycloak
+## Overview
+This document explains how to add authentication procedures in a Spring environment and integrate with Keycloak as the authentication server.
 
-1. keycloak은 도커 컴포즈에 서비스로 추가하여 실행하고, postgres DB 연결하여 유저의 정보를 유지합니다.
-2. 유저는 Keycloak을 통해 인증을 합니다. 유저가 Keycloak을 통해 인증을 완료 하면, Keycloak은 유저에게 JWT를 발급합니다. 
-3. 인증을 통해 받은 토큰은 유저가 Spring 서버에 요청을 보낼 떄, Authorization 헤더에 포함되어 서버로 전송됩니다. Spring 서버는 JWT 를 검증하여 유저의 인증 상태를 확인합니다. 
-4. 위의 설정을 위하여 Spring에서는 Spring Security 보안 설정을 추가할 것이고, 어떤 리소스에 어떤 권한이 필요한지를 명세합니다. 
+1. Keycloak is added as a service in `Docker Compose`, run, and connected to a `PostgreSQL` database to maintain user information.
+2. Users authenticate through `Keycloak`. Once a user completes authentication via `Keycloak`, Keycloak issues a `JWT (JSON Web Token)` to the user.
+3. The token received through authentication is included in the `Authorization` header when the user sends a request to the Spring server. The Spring server validates the `JWT` to verify the user's authentication status.
+4. For the above settings, Spring will add Spring Security security settings and specify which resources require what permissions.
+ 
 
-### Spring 서버의 토큰 검증 과정 
+### Token Verification Process in Spring Server
 ```mermaid
 sequenceDiagram
     participant User
@@ -28,8 +29,8 @@ sequenceDiagram
     end
 ```
 
-## 도커 컴포즈에 Keycloak 서비스 추가
-docker-compose.yml 파일에 keycloak 서비스 정의를 추가합니다.
+## Adding Keycloak Service in Docker Compose
+Add the keycloak service definition to your `docker-compose.yml` file.
 
 ```yml
 version: '3.7'
@@ -80,31 +81,36 @@ networks:
     driver: bridge
 ```
 
-1. keycloak 서비스의 이름을 keycloak으로 고정하기 위해서 `container_name: keycloak` 설정이 필요하다. 이는 -p 옵션으로 프로젝트 이름이나 폴더에 따른 컨테이너 서비스 이름에 prefix가 추가 되는것을 방지하기 위해서이다.
-2. realm 파일을 자동으로 import 하기 위하여, reaml 파일을 동기화 할 볼륨 설정이 필요하다. `./realms:/opt/keycloak/data/import/` 으로 볼륨 설정을 추가하였다.
-3. 영속성을 위해 DB를 연결했고, DB로는 postgres를 사용했다. 이를 위해서 `KC_DB`, `KC_DB_URL`, `KC_DB_USERNAME` 변수를 세팅했다. DB URL에 postgres를 도메인 이름으로 쓴 것은,  도커 컴포즈 파일안에서 postgres 서비스를 설정할 때, `container_name: postgres`로 설정했기 때문이다. 
-4. `KC_HTTP_PORT` 를 설정하여 keycloak 접속 포트를 8888로 설정하였다.
-5. `KC_HOSTNAME_URL` 와 `KC_HOSTNAME_ADMIN_URL`를 설정하여 keycloak에서 사용할 기본 Hostname 을 지정하였다. 이를 지정한 이유는 다음과 같다. 도커 내부에서 각 서비스로 연결을 시도할 때는 서로의 서비스명(container_name)을 기본으로 사용한다. 우리가 keycloak의 서비스의 컨테이너 이름을 keycloak으로 설정했기 때문에 (`container_name: keycloak`) 스프링 내부에서 keycloak 서비스로 요청을 보낼 때는 `http://keycloak:8888` 으로 요청을 보내야 한다. 반면, keycloak 입장에서도 본인 서비스의 도메인이 `keycloak`이 되었다는 것을 알아야 한다. 기준이 될 hostname이 무언인지 알아야 쿠키를 구울 때 그 기준으로 issuerurl 값을 만든다. 이 값이 제대로 설정되지 않아 issuerurl 값이 제대로 나오지 않을 경우, 인증 시도시 실패한다.
+1. container_name: keycloak is needed to fix the name of the keycloak service. This prevents the addition of a prefix to the container service name according to the project name or folder with the `-p` option.
 
-6. `--import-realm` 으로 시작해서 realm 파일을 자동 로딩하게 설정하였다. 
+2. A volume setting for synchronizing realm files for automatic import, `./realms:/opt/keycloak/data/import/`, has been added.
 
-7. ssl 설정 사용을 하지 않기 때문에, start-dev로 시작하였다.  
+3. Persistence is achieved by connecting to a database, using PostgreSQL in this case. For this, the `KC_DB`, `KC_DB_URL`, `KC_DB_USERNAME` variables are set. The domain name `postgres` is used in the `DB URL` because, in the Docker Compose file, the postgres service was set with `container_name: postgres`.
+
+4. `KC_HTTP_PORT` is set to `8888` to specify the access port for keycloak.
+
+5. `KC_HOSTNAME_URL` and `KC_HOSTNAME_ADMIN_URL` are set to designate the default Hostname for `keycloak` use. Internally within Docker, services attempt to connect to each other using their service name (container_name) as the domain. Therefore, when making requests to the keycloak service from inside Spring, it's necessary to use `http://keycloak:8888`. Conversely, it's important for keycloak itself to be aware that its service's domain is `keycloak` to correctly set the `issuer URL` in cookies. If this is not correctly set, resulting in an incorrect `issuer URL`, authentication attempts will fail.
+
+6. The realm file is set to be automatically loaded by starting with `--import-realm`.
+
+7. Since SSL configuration is not used, it starts with `start-dev`.
 
 
-## 키클락 도커 서비스에 realm 과 client와 유저 생성 
-1. keycloak의 hostname을 설정했기 때문에 docker 를 띄운 서버에서 hosts 정보 추가가 필요하다. vim /etc/hosts에 다음을 추가한다.
+
+## Creating Realm, Client, and User in Keycloak Docker Service 
+1. The hostname of the keycloak service in Docker is set to `keycloak`. While accessing keycloak internally within Docker at http://keycloak:8888 poses no issue, accessing keycloak externally for admin management requires specifying where the keycloak domain points. Therefore, adding host information is necessary on the server where Docker Desktop is launched. Add the following to `vim /etc/hosts`:
 ```
 127.0.0.1  keycloak
 ```
-2. keycloak을 도커 서비스를 띄우고, keycloak:8888로 접속한다. 
-3. Realm 을 새로 생성한다. 이름은 `app-login-realm` 으로 지정했다.
-4. client를 생성한다. 이름은 ` app-login-client` 으로 만들었다.
-5. realm role을 만든다. 롤 이름을 `USER` 으로 만들었다. 
-6. user를 생성하고, role 매핑을 한다. 유저의 이름을 `USER1` 으로 하고, 비밀번호도 `USER` 으로 지정했다.
+2. Launch the keycloak Docker service and access it at `keycloak:8888`. Complete the admin login.
+3. Create a new Realm named `app-login-realm`.
+4. Create a client named `app-login-client`.
+5. Create a realm role named `USER`.
+6. Create a user and map the role. Name the user `USER1` and set the password to `USER`.
 
 
 
-## Spring Security 설정 추가 
+## Adding Spring Security Configuration
 #### application.yml
 ```yml
 spring:
@@ -127,9 +133,8 @@ spring:
             issuer-uri: http://keycloak:8888/realms/app-login-realm
 
 ```
-1. registration > keycloak > client-id 는 위의 단계에서 생성한 client-id 이름과 동일해야 한다. 
-2. issuer-uri에서 사용하고 있는 `app-login-realm` 은 위에서 생성한 realm 이름과 동일 해야 한다. 
-
+1. registration > keycloak > client-id must be identical to the `client-id` name created in the previous steps.
+2. `issuer-uri` used must be identical to the realm name created earlier, `app-login-realm`.
 
 ####  KeycloakLogoutHandler.kt
 ```java
@@ -207,11 +212,11 @@ class SecurityConfig(
 
         http.cors().and().csrf().disable()
                 .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 세션을 사용하지 않음
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) 
                 .and()
                 .authorizeHttpRequests()
                 .requestMatchers(AntPathRequestMatcher("/swagger-ui/**"), AntPathRequestMatcher("/v3/api-docs/**"), AntPathRequestMatcher("/swagger-ui.html"), AntPathRequestMatcher("/webjars/**"), AntPathRequestMatcher("/swagger-resources/**"))
-                .permitAll() // Swagger 관련 경로에 대해 인증을 요구하지 않음
+                .permitAll()
                 .requestMatchers(AntPathRequestMatcher("/v1*"))
                 .hasRole("USER")
                 .anyRequest()
@@ -248,16 +253,16 @@ class KeycloakJwtGrantedAuthoritiesConverter :
     }
 }
 ```
-1. swagger 에 대한 문서는 권한 없이 접속할 수 있게 하였다. 
-2. `/v1*` 로 시작하는 url은 `USER` 권한이 있어야 한다. 
+1. Documentation for Swagger is accessible without requiring authentication.
+2. URLs starting with `/v1*` require `USER` permissions.
 
 
-## keycloak으로부터 인증 쿠키 발급 방법
-유저의 이름과 비밀번호 기반으로 Keycloak에 인증을 시도한다. 유저 정보가 확인되면 JWT 쿠키가 발급된다. 
-아래는 curl 요청 예시이다. user의 이름은 `user1`이고, 비밀번호는 `user1`이다. `client_id`는 위에서 설정한 `client id`가 되어야 한다. grant_type은 password 로 설정해둔다. 
+## Obtaining Authentication Cookie from Keycloak
+Authenticate against Keycloak using the user's username and password. Upon verification of user information, a JWT cookie is issued. Below is an example curl request with the username `user1` and password `user1`. The `client_id `must match the one set earlier, and the grant type is set to `password`.
+
 
 ```shell
-curl --location 'http://서버도메인:8888/realms/app-login-realm/protocol/openid-connect/token' \
+curl --location 'http://keycloak-server-domain:8888/realms/app-login-realm/protocol/openid-connect/token' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'client_id=app-login-client' \
 --data-urlencode 'username=user1' \
@@ -265,7 +270,7 @@ curl --location 'http://서버도메인:8888/realms/app-login-realm/protocol/ope
 --data-urlencode 'grant_type=password'
 
 ```
-위의 요청으로 결과를 받을 경우 다음과 같은 값을 받을 수 있다.
+The result from the above request can be as follows:
 
 ```
 {
@@ -280,8 +285,7 @@ curl --location 'http://서버도메인:8888/realms/app-login-realm/protocol/ope
 }
 ```
 
-그리고 위의 값에서 `access_token`을 jwt.io 사이트에서 decode 확인해보면 다음처럼 해당 유저와 토큰에 대한 정보가 들어 았따. 
-
+Decoding the `access_token` at jwt.io site reveals the following user and token information:
 ```
 {
   "exp": 1710774484,
@@ -321,10 +325,10 @@ curl --location 'http://서버도메인:8888/realms/app-login-realm/protocol/ope
 }
 ```
 
+The `access_token` obtained must be included in the `Authorization` header for subsequent requests to the Spring server. Here's an example request where the `access_token` is used:
 
-위에서 받은 JWT 쿠키에는 access_token 값이 있는데, 이 값은 이후 Spring 서버에 요청을 보낼때마다 헤더값에 추가가 되어야 한다. 다음은 그 요청의 예이다. `access_token` 의 값을 Authorization에 넣으면 된다. 
 ```
-curl --location 'http://스프링서버/v1/reports/geo-query?polygon=126.90727686146623%2C37.53054723433391&polygon=126.90835778517184%2C37.53085785794988&polygon=126.90949701621935%2C37.52790593739182&polygon=126.90832966272394%2C37.52759509171798' \
+curl --location 'http://spring-server-domain/v1/reports/geo-query?polygon=126.90727686146623%2C37.53054723433391&polygon=126.90835778517184%2C37.53085785794988&polygon=126.90949701621935%2C37.52790593739182&polygon=126.90832966272394%2C37.52759509171798' \
 --header 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJMaU1Hd0ZHT0pWUFpxcjFuNnF4X3Z0MWVhTXJmbzIxeGxqQl91TWszNTYwIn0.eyJleHAiOjE3MTA3NzQ0ODQsImlhdCI6MTcxMDc3NDE4NCwianRpIjoiZGE1YmI5MDEtNmE4Ny00NjA5LTlhMzAtOGUwNjVkNzFmYzMxIiwiaXNzIjoiaHR0cDovL2tleWNsb2FrOjg4ODgvcmVhbG1zL2FwcC1sb2dpbi1yZWFsbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiIzNTc3MDkxYy04NDAyLTQ3YTAtYWY5OC04ODc3YTE1MDM3ODMiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJhcHAtbG9naW4tY2xpZW50Iiwic2Vzc2lvbl9zdGF0ZSI6Ijc3MmNmYjI3LWQ4NmEtNGNmYS05ODFlLTEzN2Y2MjViY2Y2ZCIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbImRlZmF1bHQtcm9sZXMtYXBwLWxvZ2luLXJlYWxtIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiIsInVzZXIiXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6ImVtYWlsIHByb2ZpbGUiLCJzaWQiOiI3NzJjZmIyNy1kODZhLTRjZmEtOTgxZS0xMzdmNjI1YmNmNmQiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6InVzZXIxIn0.CsNbz-yxd5poDeUG-X6rz_DqU6i7iPGYR7Jk-D7Yp78mKyJjJsScTgqaFtIpDcOS8aHtZFInUxvicy6iLnfb-CaNFSu4uHx65k3u0xGr2ph5_ZBYuCy7SPPEb0FcuNljqFhnHkM9w3MZCvGksLWjkKol3ZZGTjOBu4uJ4svhsY973dEu0_z-GxyU7V5fxAsbNdY_l-REhz1cvnki9vtv3QgWJt6V8nxnbezKk08-Dbl7RXGMFf5zLvKoGEBBctesLFyagf2MfiT_YkeQbglljm-h0wxUe1B2cZUf71Go0sjQPNmBQEbLHL6_7zBhb9_7JdZsj61dyJ9cUe7HbGgcGA'
 
 ```
