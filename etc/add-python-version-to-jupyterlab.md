@@ -1,4 +1,8 @@
-## Connect to JupyterLab with Python 3.11
+## install JupyterLab
+1. go to [https://github.com/jupyterlab/jupyterlab-desktop](https://github.com/jupyterlab/jupyterlab-desktop)
+2. select and download "arm64 Installer (Apple silicon)"
+
+## Add new kernel(Python 3.11) to JupyterLab
 
 1. find the path of the python3.11
 ```
