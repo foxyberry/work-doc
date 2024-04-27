@@ -97,11 +97,6 @@ demo_ephemeral_chat_history = ChatMessageHistory()
 ```python
 demo_ephemeral_chat_history.add_user_message("what is MBTI")
 
-class ModifiedJSONAgentOutputParser(JSONAgentOutputParser):
-    def __call__(self, text: str) -> str:
-        parsed_output = super().__call__(text)
-        return parsed_output['action_input']
-        
 
 #### 11. connect with chains for question and answer
 conversational_retrieval_chain = RunnablePassthrough.assign(
