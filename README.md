@@ -15,4 +15,12 @@
 - [Python Version in JupyterLab](./etc/add-python-version-to-jupyterlab.md)
 
 ## Language Processing Chains
-- [Language Chains](./lang-chain/README.md)
+- [Language Chains Quick Start](./lang-chain/quick-start.md)
+### Chatbots
+- [Quick Start](./lang-chain/chatbots/quick-start.md)
+- [Retrieval](./lang-chain/chatbots/retrieval.md)
+- [Tool Usage](./lang-chain/chatbots/tool-usage.md)
+### Memory Management
+- [Memory Management Documentation](./lang-chain/memory-management/README.md)
+### Tool Use and Agents
+- [Agent Tools Quick Start](./lang-chain/tool-use-and-agents/quick-start.md)
