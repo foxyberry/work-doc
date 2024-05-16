@@ -15,7 +15,6 @@
 - [Python Version in JupyterLab](./etc/add-python-version-to-jupyterlab.md)
 
 ## Language Processing Chains
-- [Language Chains Quick Start](./lang-chain/quick-start.md)
 ### Chatbots
 - [Quick Start](./lang-chain/chatbots/quick-start.md)
 - [Retrieval](./lang-chain/chatbots/retrieval.md)
