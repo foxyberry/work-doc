@@ -4,7 +4,7 @@
 2. To facilitate effective querying, create the Search class and convert user questions to conform to the Search class.
 3. Use the LLM to transform the user's question into the Search class format and retrieve results from the vector store.
 
-```
+```python
 import dotenv
 
 from typing import Optional

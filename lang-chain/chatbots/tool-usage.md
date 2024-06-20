@@ -1,5 +1,6 @@
 1. Define a tool, chat, prompt, agent history 
-```
+
+```python
 import dotenv
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_openai import ChatOpenAI

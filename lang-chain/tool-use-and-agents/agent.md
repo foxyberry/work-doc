@@ -10,7 +10,7 @@ These tools can perform API calls, function executions, or database queries.
 
 
 
-```
+```python
 import getpass
 import os
 from langchain_core.tools import tool
