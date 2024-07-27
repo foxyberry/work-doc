@@ -1,3 +1,7 @@
+## reference 
+ -  https://python.langchain.com/v0.1/docs/use_cases/chatbots/quickstart/
+
+## Step 
 1. file load -> splitter -> store to vector DB 
 
 ```python
