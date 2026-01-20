@@ -4,6 +4,18 @@
 
 ---
 
+## 🏢 Project Portfolio
+
+### 🏠 Rebuild Analytics (Korean PropTech)
+* [🏠 **Rebuild Analytics**](./korean-proptech-project/README.md) / [🇰🇷 **Korean Ver.**](./korean-proptech-project/README-kr.md)
+  - Urban redevelopment feasibility analysis platform with map-based polygon selection
+  - **Tech Stack**: Kotlin, Spring Boot, Elasticsearch, FastAPI, LangChain, Keycloak
+  - **Key Features**: Real-time feasibility analysis, AI-powered data interpretation, Excel/PDF export
+  - **Related Docs**:
+    - [📊 Regional Price Adjustment Model](./korean-proptech-project/regional-price-adjustment-model.md) / [🇰🇷 Korean Ver.](./korean-proptech-project/regional-price-adjustment-model-kr.md)
+
+---
+
 ## 🏗️ DevOps & Infrastructure
 *Streamlining development workflows and optimizing deployment pipelines.*
 
@@ -47,11 +59,15 @@
 ---
 
 ## 🛠 Tech Stacks
-![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) 
+![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/spring%20boot-%236DB33F.svg?style=for-the-badge&logo=springboot&logoColor=white)
+![Elasticsearch](https://img.shields.io/badge/elasticsearch-%23005571.svg?style=for-the-badge&logo=elasticsearch&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)
 ![Keycloak](https://img.shields.io/badge/Keycloak-EBA440?style=for-the-badge&logo=keycloak&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DC382D.svg?style=for-the-badge&logo=redis&logoColor=white)
 
 ---
 **Contact**
