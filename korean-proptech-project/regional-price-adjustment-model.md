@@ -1,206 +1,206 @@
-# 아파트 매매가격지수 기반 지역별 시세 보정 모델 도입
+# Regional Price Adjustment Model Based on Apartment Sales Price Index
 
-## 목차
-1. [도입 배경 및 목적](#1-도입-배경-및-목적)
-2. [시세 보정 알고리즘](#2-시세-보정-알고리즘)
-3. [지역별 가중치 분석 결과](#3-지역별-가중치-분석-결과-202503-기준)
-4. [실제 계산 예시](#4-실제-계산-예시)
-5. [데이터 기반 주요 인사이트](#5-데이터-기반-주요-인사이트)
-6. [기울기 보정의 필요성](#6-왜-기울기매매지수-보정이-필수적인가-the-why)
-7. [활용 방안](#7-활용-방안)
-8. [한계점 및 주의사항](#8-한계점-및-주의사항)
+## Table of Contents
+1. [Background and Objectives](#1-background-and-objectives)
+2. [Price Adjustment Algorithm](#2-price-adjustment-algorithm)
+3. [Regional Price Index Analysis](#3-regional-price-index-analysis-as-of-march-2025)
+4. [Calculation Examples](#4-calculation-examples)
+5. [Data-Driven Key Insights](#5-data-driven-key-insights)
+6. [Why Index-Based Adjustment is Essential](#6-why-index-based-adjustment-is-essential-the-why)
+7. [Use Cases](#7-use-cases)
+8. [Limitations and Precautions](#8-limitations-and-precautions)
 
-## 1. 도입 배경 및 목적
-현재 부동산 자산 가치 평가의 기준이 되는 공시가격은 연 1회 산정되는 특성상 급변하는 시장의 시차(Time Lag)를 반영하지 못하며, 지역별로 상이한 회복 탄력성을 포착하는 데 한계가 있습니다.
+## 1. Background and Objectives
+Official assessed values, which serve as the foundation for real estate asset valuation, are calculated annually and thus cannot reflect the time lag of rapidly changing markets, nor can they capture the varying recovery elasticity across different regions.
 
-본 문서는 한국부동산원의 최신 아파트매매가격지수(2025년 3월 기준)를 활용하여, 공시가격과 실제 시장 가격 사이의 간극을 데이터 기반으로 정교하게 보정하는 모델 도입을 목적으로 합니다.
+This document aims to introduce a model that precisely adjusts the gap between official assessed values and actual market prices using the latest Apartment Sales Price Index (as of March 2025) from the Korea Real Estate Board, based on data-driven methodology.
 
-**기대 효과:**
-- 실시간 시장 변동성 반영
-- 지역별 가격 격차의 정밀한 포착
-- 자산 가치 평가의 정확도 향상
+**Expected Benefits:**
+- Real-time reflection of market volatility
+- Precise capture of regional price disparities
+- Enhanced accuracy in asset valuation
 
-## 2. 시세 보정 알고리즘
+## 2. Price Adjustment Algorithm
 
-### 2.1 핵심 공식
+### 2.1 Core Formula
 
-공시가격에 지역별 특화 가중치(W)를 곱하여 현재 시세를 도출합니다.
+Current market price is derived by multiplying the official assessed value by a region-specific weight (W).
 ```
 W = (1 ÷ R) × (I_current ÷ I_appraisal)
 ```
 
-- **R (현실화율)**: 0.8 (80%) 고정 적용 (기본 배수 1.25)
-- **I_current**: 현재 시점의 매매가격지수
-- **I_appraisal**: 공시가격 산정 기준일의 매매가격지수
+- **R (Realization Rate)**: Fixed at 0.8 (80%), base multiplier 1.25
+- **I_current**: Current sales price index
+- **I_appraisal**: Sales price index at the appraisal base date
 
-### 2.2 산출 원리
+### 2.2 Calculation Methodology
 
-본 모델은 **공시가격 이후의 순수한 시장 변동분만 보정**하는 방식을 채택합니다.
+This model adopts an approach that **adjusts only the pure market fluctuations after the appraisal date**.
 
-- 공시가격은 특정 시점(예: 2024년 1월)의 시장 가격을 기준으로 산정됩니다
-- 현재까지의 시장 변동분 = I_current ÷ I_appraisal
-- 이를 현실화율의 역수(1.25)와 결합하여 최종 보정치를 산출합니다
+- Official assessed values are based on market prices at a specific point in time (e.g., January 2024)
+- Market fluctuation to date = I_current ÷ I_appraisal
+- This is combined with the reciprocal of the realization rate (1.25) to calculate the final adjustment factor
 
-**장점:**
-- ✅ 공시가격 이후의 시차(Time-Lag)만 보정
-- ✅ 장기 누적 효과로 인한 가중치 과대 산정 방지
-- ✅ 10년 후에도 지속 가능한 모델
+**Advantages:**
+- ✅ Adjusts only for time-lag after appraisal
+- ✅ Prevents excessive weight calculation due to long-term cumulative effects
+- ✅ Sustainable model even 10 years later
 
-## 3. 지역별 매매가격지수 현황 (2025.03 기준)
+## 3. Regional Price Index Analysis (as of March 2025)
 
-한국부동산원 데이터를 분석한 결과, 동일한 서울 지역 내에서도 자치구별로 가격 변동률이 극명하게 갈리는 초양극화 현상이 확인되었습니다.
+Analysis of Korea Real Estate Board data reveals an extreme polarization phenomenon where adjustment weights vary dramatically even among districts within Seoul.
 
-| 지역 분류 | 대표 지역 | 매매가격지수 (2025.03) | 2021.06 대비 변동률 | 데이터 인사이트 |
-|----------|----------|---------------------|-------------------|----------------|
-| **상승 선도** | 서초구 | 117.3 | +17.3% | 서울 내 최고 상승률 기록 |
-| | 송파구 | 113.0 | +13.0% | 강남 3구의 강한 회복세 반영 |
-| | 강남구 | 112.9 | +12.9% | 지속적인 우상향 기울기 유지 |
-| **평균/보합** | 양천구 | 101.4 | +1.4% | 2021년 기준 시점 수준 회복 |
-| | 서울특별시(계) | 99.7 | -0.3% | 서울 평균은 기준점에 근접 |
-| **정체/하락** | 강북구 | 88.1 | -11.9% | 기준점 대비 약 12% 낮은 수준 |
-| | 도봉구 | 86.0 | -14.0% | 서울 내 최저 지수, 하락 지속 |
-| **위험/침체** | 대구광역시 | 75.8 | -24.2% | 2021년 대비 큰 폭 하락 |
-| | 세종특별자치시 | 70.8 | -29.2% | 전국 최저 지수 기록 |
+| Category | Region | Sales Price Index (Mar 2025) | Change vs Jun 2021 | Data Insight |
+|----------|--------|------------------------------|---------------------|--------------|
+| **Leading Growth** | Seocho-gu | 117.3 | +17.3% | Highest growth rate in Seoul |
+| | Songpa-gu | 113.0 | +13.0% | Strong recovery in Gangnam-3 districts |
+| | Gangnam-gu | 112.9 | +12.9% | Sustained upward trajectory |
+| **Average/Stable** | Yangcheon-gu | 101.4 | +1.4% | Recovered to 2021 baseline level |
+| | Seoul (Overall) | 99.7 | -0.3% | Seoul average near baseline |
+| **Stagnant/Declining** | Gangbuk-gu | 88.1 | -11.9% | Approx. 12% below baseline |
+| | Dobong-gu | 86.0 | -14.0% | Lowest index in Seoul, continued decline |
+| **Risk/Depressed** | Daegu Metro | 75.8 | -24.2% | Significant decline vs 2021 |
+| | Sejong City | 70.8 | -29.2% | Lowest index nationwide |
 
-**참고:** 실제 가중치 산출 시에는 해당 부동산의 공시가격 산정 기준일의 지수를 사용해야 합니다.
+**Note:** For actual weight calculation, use the index at the property's appraisal base date.
 
-## 4. 실제 계산 예시
+## 4. Calculation Examples
 
-아래는 2025년 공시가격(2024.01 기준)이 10억 원인 아파트의 현재 시세(2025.03)를 보정한 결과입니다.
+Below are examples of adjusting current market prices (March 2025) for apartments with a 2025 official assessed value (based on January 2024) of 1 billion KRW.
 
-### 예시 1: 서초구 아파트
+### Example 1: Seocho-gu Apartment
 ```
-공시가격: 10억 원 (2025년 공시가격)
-공시가격 산정 기준일: 2024년 1월 (지수 110.0)
-현재 시점: 2025년 3월 (지수 117.3)
+Official Assessed Value: 1 billion KRW (2025 assessment)
+Appraisal Base Date: January 2024 (Index 110.0)
+Current Date: March 2025 (Index 117.3)
 
-가중치 W = (1 ÷ 0.8) × (117.3 ÷ 110.0) = 1.25 × 1.066 = 1.333
-보정 시세 = 10억 원 × 1.333 = 13.3억 원
+Weight W = (1 ÷ 0.8) × (117.3 ÷ 110.0) = 1.25 × 1.066 = 1.333
+Adjusted Price = 1 billion KRW × 1.333 = 1.33 billion KRW
 
-✅ 해석: 공시가격 이후 약 6.6% 상승 반영
-```
-
-### 예시 2: 양천구 아파트
-```
-공시가격: 10억 원 (2025년 공시가격)
-공시가격 산정 기준일: 2024년 1월 (지수 100.0)
-현재 시점: 2025년 3월 (지수 101.4)
-
-가중치 W = (1 ÷ 0.8) × (101.4 ÷ 100.0) = 1.25 × 1.014 = 1.268
-보정 시세 = 10억 원 × 1.268 = 12.7억 원
-
-✅ 해석: 공시가격 이후 약 1.4% 상승 반영
+✅ Interpretation: Reflects ~6.6% increase since appraisal date
 ```
 
-### 예시 3: 세종시 아파트 (하락 추세)
+### Example 2: Yangcheon-gu Apartment
 ```
-공시가격: 10억 원 (2025년 공시가격)
-공시가격 산정 기준일: 2024년 1월 (지수 72.0)
-현재 시점: 2025년 3월 (지수 70.8)
+Official Assessed Value: 1 billion KRW (2025 assessment)
+Appraisal Base Date: January 2024 (Index 100.0)
+Current Date: March 2025 (Index 101.4)
 
-가중치 W = (1 ÷ 0.8) × (70.8 ÷ 72.0) = 1.25 × 0.983 = 1.229
-보정 시세 = 10억 원 × 1.229 = 12.3억 원
+Weight W = (1 ÷ 0.8) × (101.4 ÷ 100.0) = 1.25 × 1.014 = 1.268
+Adjusted Price = 1 billion KRW × 1.268 = 1.27 billion KRW
 
-⚠️ 해석: 공시가격 이후 약 1.7% 하락 반영
+✅ Interpretation: Reflects ~1.4% increase since appraisal date
 ```
 
-**핵심 차이점 (개선 전 vs 개선 후):**
-- **개선 전**: 2021년부터의 누적 변동을 모두 반영 → 서초구 14.7억, 세종시 8.9억 (과도한 격차)
-- **개선 후**: 공시가격 이후의 순수 변동만 반영 → 서초구 13.3억, 세종시 12.3억 (합리적 격차)
-- 지역 간 격차는 공시가격 산정 이후의 시장 변동만 반영하므로 훨씬 현실적
+### Example 3: Sejong City Apartment (Declining Trend)
+```
+Official Assessed Value: 1 billion KRW (2025 assessment)
+Appraisal Base Date: January 2024 (Index 72.0)
+Current Date: March 2025 (Index 70.8)
 
-## 5. 데이터 기반 주요 인사이트
+Weight W = (1 ÷ 0.8) × (70.8 ÷ 72.0) = 1.25 × 0.983 = 1.229
+Adjusted Price = 1 billion KRW × 1.229 = 1.23 billion KRW
 
-1. **지역별 회복 속도의 극명한 차이**: 2025년 3월 기준, 서초구(117.3)는 2021년 대비 17.3% 상승한 반면, 세종시(70.8)는 29.2% 하락하여 약 46.5p의 격차를 보입니다. 이는 지역별 시장 역학이 완전히 다른 궤적을 그리고 있음을 의미합니다.
+⚠️ Interpretation: Reflects ~1.7% decline since appraisal date
+```
 
-2. **단기 모멘텀의 차이**: 최근 6개월(2024년 9월~2025년 3월)간 서초구는 111.6에서 117.3으로 가파르게 상승(+5.1%)한 반면, 도봉구는 85.9에서 86.0으로 횡보(+0.1%)하며 지역별 회복 속도의 격차가 더욱 벌어지고 있습니다.
+**Key Differences (Before vs After Improvement):**
+- **Before**: Reflected all cumulative changes from 2021 → Seocho 1.47B, Sejong 0.89B (excessive gap)
+- **After**: Reflects only changes since appraisal → Seocho 1.33B, Sejong 1.23B (reasonable gap)
+- Regional disparities now reflect only post-appraisal market movements, making them far more realistic
 
-3. **지방 강소도시의 약진**: 서울 강남권 외에도 경상북도 상주시(117.0), 충청북도 제천시(114.9) 등 일부 지방 도시들이 서초구와 대등한 높은 지수를 기록하고 있어, 수도권 집중이 아닌 특정 지역별 선택적 상승이 나타나고 있습니다.
+## 5. Data-Driven Key Insights
 
-4. **하락 지역의 지속적 침체**: 세종(70.8)이나 대구(75.8)와 같은 지역은 2021년 이후 지속적으로 하락하고 있으며, 공시가격 산정 이후에도 추가 하락이 발생할 경우 보정 시세가 공시가격보다 낮아질 수 있습니다.
+1. **Stark Contrast in Regional Recovery Speeds**: As of March 2025, Seocho-gu (117.3) has risen 17.3% from 2021, while Sejong City (70.8) has fallen 29.2%, showing a 46.5-point gap. This indicates completely different market dynamics across regions.
 
-## 6. 왜 '기울기(매매지수)' 보정이 필수적인가? (The Why)
+2. **Short-term Momentum Differences**: Over the past 6 months (Sep 2024 - Mar 2025), Seocho-gu surged from 111.6 to 117.3 (+5.1%), while Dobong-gu stagnated from 85.9 to 86.0 (+0.1%), widening the regional recovery speed gap.
 
-1. **시계열적 불일치 해소 (Time-Lag Correction)**
-    - 공시가격은 과거 특정 시점(예: 2024년 1월)의 시장 가격을 기준으로 산정됩니다
-    - 매매가격지수는 월 단위로 최신 시장 변동을 추적합니다
-    - 공시가격 산정 이후 현재까지의 변동분을 반영함으로써 **'시차로 인한 가격 왜곡'**을 정밀하게 보정합니다
+3. **Rise of Regional Powerhouses**: Beyond Seoul's Gangnam area, certain regional cities like Sangju-si in Gyeongsangbuk-do (117.0) and Jecheon-si in Chungcheongbuk-do (114.9) record indices comparable to Seocho-gu, indicating selective regional growth rather than concentration in the capital area.
 
-2. **지역적 편차의 정밀 반영 (Regional Gradient)**
-    - 같은 기간(2024.01~2025.03) 동안 서초구는 +6.6% 상승, 세종시는 -1.7% 하락하는 등 지역별 시장 역학이 완전히 다릅니다
-    - 전국 일률적 보정이 아닌 **지역별 고유의 시장 흐름**을 반영하여 정확한 자산 가치 평가가 가능합니다
+4. **Persistent Depression in Declining Regions**: Areas like Sejong (70.8) and Daegu (75.8) have been continuously declining since 2021, and if additional declines occur after appraisal, adjusted prices may fall below official assessed values.
 
-3. **데이터 기반의 객관적 보정**
-    - 한국부동산원의 공식 통계를 기반으로 하므로, 주관적 판단이 배제된 **수학적 근거에 의한 시세 산출**이 가능합니다
-    - 투명하고 재현 가능한 평가 프로세스를 구축할 수 있습니다
+## 6. Why Index-Based Adjustment is Essential (The Why)
 
-4. **장기 지속 가능성 (Sustainability)**
-    - 공시가격 산정일 기준으로 보정하므로, 10년 후에도 가중치가 과도하게 커지지 않습니다
-    - 누적 효과로 인한 왜곡 없이 지속적으로 사용 가능한 모델입니다
+1. **Time-Lag Correction**
+    - Official assessed values are based on market prices at a past specific date (e.g., January 2024)
+    - Sales price indices track the latest market movements on a monthly basis
+    - Reflecting changes from appraisal date to present precisely **corrects price distortions due to time lag**
 
-## 7. 활용 방안
+2. **Precise Reflection of Regional Gradient**
+    - During the same period (Jan 2024 - Mar 2025), Seocho-gu rose +6.6% while Sejong City fell -1.7%, showing completely different regional market dynamics
+    - Rather than uniform nationwide adjustment, this enables accurate asset valuation by reflecting **region-specific market flows**
 
-본 모델은 다음과 같은 실무 영역에 적용 가능합니다:
+3. **Data-Driven Objective Adjustment**
+    - Based on official statistics from Korea Real Estate Board, enabling **mathematically grounded price calculation** free from subjective judgment
+    - Establishes a transparent and reproducible valuation process
 
-### 7.1 자산 관리 및 포트폴리오 평가
-- **부동산 자산 포트폴리오의 실시간 가치 평가**: 공시가격 기반의 정적 평가를 시장 지수 기반의 동적 평가로 전환
-- **투자 성과 모니터링**: 지역별 매매지수 변화를 추적하여 자산 가치 변동 추이 파악
+4. **Long-term Sustainability**
+    - By adjusting based on appraisal date, weights do not become excessively large even 10 years later
+    - Model can be used continuously without distortion from cumulative effects
 
-### 7.2 리스크 관리
-- **가격 역전 지역 조기 경보**: 지수 80 미만 지역에 대한 리스크 플래그 설정
-- **지역별 변동성 분석**: 6개월, 1년 단위 지수 변화율을 통한 시장 안정성 평가
+## 7. Use Cases
 
-### 7.3 담보 가치 평가
-- **대출 담보 평가 시 활용**: 공시가격에 지역별 가중치를 적용하여 실제 담보 가치 산정
-- **LTV(Loan to Value) 비율 재산정**: 시장 변동성을 반영한 정확한 대출 한도 설정
+This model can be applied to the following practical domains:
 
-### 7.4 의사결정 지원
-- **매입/매각 의사결정**: 지역별 시장 트렌드를 고려한 최적 거래 시점 판단
-- **지역 선택 전략**: 상승 선도 지역 vs 가치 저평가 지역 비교 분석
+### 7.1 Asset Management and Portfolio Valuation
+- **Real-time valuation of real estate asset portfolios**: Transform static appraisal-based valuation into dynamic market index-based valuation
+- **Investment performance monitoring**: Track asset value fluctuation trends by monitoring regional sales index changes
 
-## 8. 한계점 및 주의사항
+### 7.2 Risk Management
+- **Early warning for price reversal regions**: Set risk flags for regions with indices below 80
+- **Regional volatility analysis**: Assess market stability through 6-month and 1-year index change rates
 
-본 모델을 실무에 적용할 때 다음 사항을 반드시 고려해야 합니다:
+### 7.3 Collateral Valuation
+- **Utilization in loan collateral assessment**: Calculate actual collateral value by applying regional weights to official assessed values
+- **LTV (Loan to Value) recalculation**: Set accurate loan limits reflecting market volatility
 
-### 8.1 모델의 구조적 한계
+### 7.4 Decision Support
+- **Buy/sell decisions**: Determine optimal transaction timing considering regional market trends
+- **Regional selection strategy**: Comparative analysis of leading growth regions vs undervalued regions
 
-**✅ 개선된 점:**
-- **기준 시점 고정 문제 해결**: 기존에는 2021년 고정 기준점으로 인해 시간이 지날수록 누적 상승분이 계속 반영되어 가중치가 비현실적으로 커지는 문제가 있었습니다. 개선된 모델은 공시가격 산정일을 기준으로 하므로 이 문제가 해결되었습니다.
+## 8. Limitations and Precautions
 
-**⚠️ 여전히 존재하는 한계:**
-1. **개별 물건의 특성 미반영**
-   - 본 모델은 지역 평균 지수를 사용하므로, 개별 아파트의 브랜드, 층수, 향, 면적 등 미시적 요인은 반영하지 못합니다.
-   - 같은 지역 내에서도 개별 물건의 실제 시세는 ±20% 이상 차이가 날 수 있습니다.
+When applying this model in practice, the following must be considered:
 
-2. **현실화율의 고정값 사용**
-   - 현실화율 80%를 고정값으로 사용하나, 실제로는 지역과 물건 유형에 따라 현실화율이 상이할 수 있습니다.
-   - 2024년 이후 공시가격 현실화율 정책 변화 시 모델 재조정이 필요합니다.
+### 8.1 Structural Limitations of the Model
 
-3. **아파트에 국한된 적용 범위**
-   - 본 모델은 한국부동산원의 **아파트 매매가격지수**를 기반으로 하므로, 오피스텔, 빌라, 단독주택 등에는 직접 적용이 어렵습니다.
+**✅ Improvements Made:**
+- **Fixed Baseline Problem Resolved**: Previously, the fixed 2021 baseline caused weights to become unrealistically large over time due to cumulative increases. The improved model uses the appraisal date as baseline, resolving this issue.
 
-### 8.2 데이터 운영상 주의사항
-1. **공시가격 산정 기준일 확인 필수** ⭐
-   - 본 모델을 적용하려면 반드시 해당 부동산의 **공시가격 산정 기준일**을 확인해야 합니다.
-   - 공시가격 산정 기준일의 매매가격지수(I_appraisal)를 정확히 파악해야 올바른 가중치 산출이 가능합니다.
-   - 일반적으로 공시가격은 전년도 1월 1일 기준으로 산정되나, 개별 물건마다 다를 수 있으므로 반드시 확인이 필요합니다.
+**⚠️ Remaining Limitations:**
+1. **Individual Property Characteristics Not Reflected**
+   - This model uses regional average indices, so micro-factors like apartment brand, floor level, orientation, and area are not reflected.
+   - Actual market prices of individual properties within the same region may differ by ±20% or more.
 
-2. **월별 지수 업데이트 필수**
-   - 매매가격지수는 매월 갱신되므로, 정확한 보정을 위해서는 최신 데이터로 주기적 업데이트가 필요합니다.
-   - 데이터 지연 시 1~2개월의 시차가 발생할 수 있습니다.
+2. **Fixed Realization Rate**
+   - Uses a fixed 80% realization rate, but in reality, realization rates may vary by region and property type.
+   - Model recalibration needed if official assessed value realization rate policy changes after 2024.
 
-3. **급격한 시장 변동 시 한계**
-   - 정책 변화, 금리 급등, 경제 위기 등 외부 충격으로 인한 급격한 시장 변동 시에는 지수 반영에 시차가 발생할 수 있습니다.
+3. **Limited to Apartments**
+   - This model is based on Korea Real Estate Board's **Apartment Sales Price Index**, making direct application to officetels, villas, and detached houses difficult.
 
-4. **지역 세분화 수준**
-   - 지수가 제공되는 지역 단위(시/군/구)보다 세밀한 단위(동/호수)의 가격 차이는 포착하지 못합니다.
+### 8.2 Data Operational Precautions
+1. **Appraisal Base Date Verification Required** ⭐
+   - To apply this model, you **must verify the appraisal base date** of the property.
+   - Accurate identification of the sales price index (I_appraisal) at the appraisal base date is essential for correct weight calculation.
+   - While official assessed values are generally based on January 1 of the previous year, this may vary by individual property, requiring verification.
 
-### 8.3 활용 시 권고사항
-- **보조 지표로 활용**: 본 모델을 유일한 평가 기준으로 사용하지 말고, 실거래가, 호가, 감정평가 등 다른 지표와 병행 검토
-- **전문가 검증**: 중요한 의사결정(대규모 투자, 담보 설정 등)에는 반드시 부동산 전문가의 검증 필요
-- **지속적 모니터링**: 모델 성능을 주기적으로 검증하고, 실제 거래가와의 오차율을 추적하여 개선
+2. **Monthly Index Updates Required**
+   - Sales price indices are updated monthly, requiring periodic updates with the latest data for accurate adjustment.
+   - Data delays may cause 1-2 months of lag.
+
+3. **Limitations During Rapid Market Changes**
+   - During rapid market fluctuations due to policy changes, interest rate spikes, economic crises, etc., there may be lags in index reflection.
+
+4. **Regional Granularity Level**
+   - Cannot capture price differences at units (dong/unit number) more granular than the index-provided regional units (si/gun/gu).
+
+### 8.3 Usage Recommendations
+- **Use as Supplementary Indicator**: Do not use this model as the sole valuation standard; cross-reference with actual transaction prices, asking prices, and professional appraisals
+- **Expert Verification**: For critical decisions (large-scale investments, collateral settings), always require verification by real estate professionals
+- **Continuous Monitoring**: Periodically validate model performance and track error rates against actual transaction prices for improvement
 
 ---
 
-**작성일**: 2025년 3월  
-**데이터 출처**: 한국부동산원 아파트매매가격지수
+**Written**: March 2025
+**Data Source**: Korea Real Estate Board Apartment Sales Price Index
