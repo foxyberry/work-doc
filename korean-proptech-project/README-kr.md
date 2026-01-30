@@ -17,8 +17,8 @@
 - **지도 기반 폴리곤 검색**: 지도 위에서 폴리곤을 그려 재개발/재건축 예정지를 즉시 설정
 - **실시간 사업성 분석**: 토지 조서, 노후도 조건, 부동산 지수를 기반으로 종합적인 사업성 분석 결과 자동 생성
 - **손익 시뮬레이션**: 다양한 조건을 조합하여 즉각적인 손익 시뮬레이션 확인 가능
-- **분석 결과 다운로드**: Excel 형태의 분석 보고서를 즉시 생성하여 제3자와 손쉽게 공유
-- **AI 기반 데이터 해석**: LLM을 통해 시각화 그래프를 자연어로 자동 설명하여 비전문가도 쉽게 이해 가능
+- **분석 결과 다운로드**: Excel과 PDF 형태의 분석 보고서를 즉시 생성하여 제3자와 손쉽게 공유
+- **AI 부동산 상담**: LangGraph 기반 챗봇으로 선택 지역의 데이터를 자연어로 질의하고 인사이트 획득
 - **정비구역 데이터 통합**: 서울시 의제 처리된 정비구역, 재정비촉진지구, 도시개발구역 리스트 반영
 
 ### 제품/서비스 경쟁력
@@ -35,19 +35,14 @@
 
 리빌드 애널리틱스는 전문가, 기업 투자자, 일반 투자자 모두를 위한 사업성 검토 도구로, 정보 비대칭이 심한 정비사업 분야에서 의사결정의 정확성과 효율성을 향상시키고자 합니다.
 
-### 진행 중인 실험
-
-- **LLM 기반 그래프 자동 설명**: 분석 결과의 시각화 그래프를 LLM을 통해 자동 설명하는 기능 실험 중. 사용자가 이해하기 어려운 지표나 데이터 해석을 자연어로 제공
-- **MCP(Model Context Protocol) 연동**: 직접 개발한 API를 MCP로 연결하여 Claude 클라이언트와 연동하는 실험 진행 중. 유저가 특정 사업지의 분석 결과를 보다 쉽게 이해하고, 챗봇 투자 상담으로 확장 가능성 검토 중
-
 ---
 
 ## Tech Stack
 
 ```
 Backend       Kotlin, Java 17, Spring Boot 3.3.2, FastAPI
+AI/Agent      LangGraph, LangChain, OpenAI GPT-4o, MCP (Model Context Protocol)
 Data          Elasticsearch 8.8, Redis, PostgreSQL
-AI/ML         LangChain, OpenAI GPT-4, MCP (Model Context Protocol)
 Auth          Keycloak 23.0, OAuth2, JWT, RBAC
 DevOps        Docker, GitHub Actions, Self-hosted Runner
 Document      Apache POI (Excel), OpenHTMLtoPDF, iText7
@@ -55,108 +50,51 @@ Document      Apache POI (Excel), OpenHTMLtoPDF, iText7
 
 ---
 
-## 핵심 도전 과제와 해결 과정
+## AI 상담 서비스 (LangGraph)
 
-### 1. 정부 공공데이터의 비정형/대용량 처리
+### 개요
 
-**문제 상황:**
-- 정부에서 제공하는 CSV 파일은 수십만~수백만 건의 레코드
-- 파일마다 인코딩, 컬럼 구조, 데이터 형식이 다름
-- 단순 파싱으로는 메모리 부족 발생
+LangGraph 기반의 부동산 상담 챗봇입니다. 사용자가 지도에서 선택한 지역의 토지/건물 데이터를 기반으로 자연어 질의에 응답합니다.
 
-**해결 방법:**
-- OpenCSV 기반 커스텀 파서 구축, 스트리밍 방식으로 메모리 효율화
-- 데이터 유형별(D003, D006, D151 등) 전용 매퍼 클래스 설계
-- Elasticsearch Bulk API로 배치 인덱싱, 처리 속도 최적화
-- 데이터 정합성 검증 로직 추가로 누락/오류 데이터 필터링
+### 주요 기능
 
-### 2. 복잡한 인증/인가 체계 구축
+- **컨텍스트 기반 상담**: 사용자가 선택한 폴리곤 영역의 데이터를 세션에 유지하며 멀티턴 대화 지원
+- **도구 기반 데이터 조회**: LLM이 필요한 정보를 판단하여 Spring API를 호출하고 결과를 해석
+- **실시간 스트리밍**: SSE(Server-Sent Events) 기반 응답 스트리밍으로 빠른 사용자 경험 제공
+- **후속 질문 제안**: 대화 맥락에 맞는 관련 질문을 자동으로 추천
 
-**문제 상황:**
-- 게스트, 일반 사용자, 프리미엄 사용자, 관리자 등 다양한 역할 필요
-- AI 서비스(Python)와 메인 API(Kotlin) 간 인증 공유 필요
-- MCP 서버에서도 동일한 인증 체계 사용 필요
+### 아키텍처
 
-**해결 방법:**
-- Keycloak을 IdP로 도입, OAuth 2.0 + OIDC 표준 준수
-- Spring Security와 Keycloak 연동으로 RBAC 구현
-- FastAPI용 JWT 검증 미들웨어 직접 구현
-- MCP 서버에 세션 토큰 캐싱으로 반복 인증 최소화
-
-**RBAC 구조:**
 ```
-guest      → Basic API Access
-user       → Standard Features
-super_user → Premium (Excel, PDF Export)
-admin      → Administrative APIs
+┌─────────────────────────────────────────────────────────────────┐
+│                        LangGraph Agent                          │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────┐   │
+│  │  Agent Node   │──│  Tool Node    │──│  Checkpointer     │   │
+│  │  (GPT-4o)     │  │  (API 호출)   │  │  (Redis/Memory)   │   │
+│  └───────────────┘  └───────────────┘  └───────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+         │                    │
+         ▼                    ▼
+┌─────────────────┐  ┌─────────────────────────────────────────┐
+│  FastAPI Server │  │            Spring Boot API              │
+│  (SSE Streaming)│  │  토지요약, 건물정보, 노후도, 사업성분석   │
+└─────────────────┘  └─────────────────────────────────────────┘
 ```
 
-### 3. 여러 환경의 통합 로그 관리
+### 제공 도구 (Tools)
 
-**문제 상황:**
-- Dev, Stage, Prod 환경의 로그가 각각 분산
-- 장애 발생 시 여러 서버에 접속해서 로그 확인 필요
-- 텍스트 로그로는 검색/분석 어려움
+| 도구 | 설명 |
+|------|------|
+| `get_land_summary` | 선택 영역의 토지 요약 정보 조회 |
+| `get_land_summary_analysis` | 사업성 분석 결과 조회 |
+| `get_building_info` | 건물 상세 정보 조회 |
+| `check_aging_building` | 노후 건축물 현황 확인 |
+| `get_jibun_report` | 지번별 상세 보고서 조회 |
+| `convert_units` | 면적/가격 단위 변환 |
 
-**해결 방법:**
-- ELK Stack(Elasticsearch + Logstash + Kibana) 직접 구축
-- Logstash Logback Encoder로 JSON 구조화 로그 전송
-- 환경별 TCP 포트 분리 (dev:4560, prod:4561, stage:4562)
-- 환경별 인덱스 패턴으로 Kibana에서 통합 검색 가능
+### MCP (Model Context Protocol) 연동
 
-### 4. AI 서비스와 기존 시스템 통합
-
-**문제 상황:**
-- GPT를 활용한 토지 분석 기능 추가 필요
-- 기존 Spring Boot API와 자연스럽게 연동해야 함
-- Claude Desktop에서도 직접 데이터 조회 가능하게 하고 싶음
-
-**해결 방법:**
-- LangChain + FastAPI로 별도 AI 서비스 구축
-- LangServe로 Chain을 REST API로 노출
-- MCP(Model Context Protocol) 서버 구현으로 Claude Desktop 연동
-- LangSmith 연동으로 모든 LLM 호출 추적 및 디버깅
-
-### 5. Multi-Environment 배포 자동화
-
-**문제 상황:**
-- 클라우드가 아닌 개인 서버에서 HTTPS 서비스 필요
-- 수동 배포는 실수 가능성 높고 시간 소모
-
-**해결 방법:**
-- Let's Encrypt로 무료 SSL 인증서 수동 발급 및 갱신
-- GitHub Actions + Self-hosted Runner로 CI/CD 파이프라인 구축
-- Git 태그 생성 시 자동 배포 트리거
-- PKCS12 Keystore 변환 자동화 (GitHub Secrets 활용)
-
-**환경별 구성:**
-
-| Env | Port | Protocol | 용도 |
-|-----|------|----------|------|
-| Local | 8080 | HTTP | IDE 개발 |
-| Dev | 8080 | HTTP | Docker 테스트 |
-| Stage | 9442 | HTTPS | 사전 검증 |
-| Prod | 9443 | HTTPS | 운영 (Full Stack + AI) |
-
----
-
-## 기술 선택의 이유
-
-### Kotlin + Spring Boot
-- **선택 이유**: Kotlin + Spring 조합에 대한 경험이 많기 때문에 
-- **결과**: 런타임 NullPointerException 거의 발생하지 않음
-
-### Elasticsearch
-- **선택 이유**: 한국어 형태소 분석 지원, GeoShape 쿼리로 위치 기반 검색 가능
-- **결과**: 수백만 건 데이터에서 밀리초 단위 검색 응답
-
-### Keycloak
-- **선택 이유**: OAuth 2.0/OIDC 완전 지원, RBAC 내장, 관리 UI 제공
-- **결과**: 복잡한 역할 기반 접근 제어를 설정만으로 구현
-
-### LangChain + MCP
-- **선택 이유**: LLM 애플리케이션의 사실상 표준, MCP로 Claude 직접 연동 가능
-- **결과**: 프롬프트 관리, 호출 추적, 다양한 클라이언트 지원
+Claude Desktop 및 기타 MCP 클라이언트에서 직접 토지 데이터를 조회할 수 있도록 MCP 서버를 제공합니다. 동일한 API 클라이언트 코드를 공유하여 일관된 데이터 접근을 보장합니다.
 
 ---
 
@@ -165,15 +103,15 @@ admin      → Administrative APIs
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        Client Applications                          │
+│            Web App (Next.js)  │  Claude Desktop (MCP)               │
 └─────────────────────────────────────────────────────────────────────┘
                                    │
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                       Application Layer                             │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────┐ │
-│  │  Spring Boot    │  │  FastAPI        │  │  MCP Server         │ │
-│  │  REST API       │  │  AI Service     │  │  Claude 연동        │ │
-│  │  (:9443)        │  │  (:8123)        │  │                     │ │
+│  │  Spring Boot    │  │  LangGraph      │  │  MCP Server         │ │
+│  │  REST API       │◄─│  AI Chatbot     │  │  Claude 연동        │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────┘
                                    │
@@ -194,27 +132,51 @@ admin      → Administrative APIs
 │  └───────────────────────────┘  └───────────────────────────────┘  │
 │  ┌─────────────────┐  ┌───────────────────────────────────────┐    │
 │  │      Redis      │  │       External APIs                   │    │
-│  │     (Cache)     │  │  OpenAI │ Map API │ Government Data   │    │
+│  │  (Cache/Session)│  │  OpenAI │ Map API │ Government Data   │    │
 │  └─────────────────┘  └───────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 프로젝트 구조
+## 보고서 생성
 
-```
-├── application/          # Spring Boot REST API
-├── batch/etl/            # Data Pipeline (Picocli CLI)
-├── common/
-│   ├── csv-reader/       # Government CSV Parser
-│   ├── es/               # Elasticsearch Integration
-│   ├── generator/        # Report Engine (PDF, Excel)
-│   ├── model/            # Shared DTOs & Entities
-│   └── redis/            # Cache Module
-├── langchain/            # AI Service (FastAPI + LangChain)
-└── mcp-server/           # Model Context Protocol Server
-```
+분석 결과를 다양한 형식으로 다운로드할 수 있습니다.
+
+### Excel 보고서
+
+| 시트 | 포함 내용 |
+|------|----------|
+| 토지 요약 | 필지수, 면적, 용적률, 노후화율 등 종합 정보 |
+| 건물 정보 | 건물별 상세 정보 (구조, 층수, 사용승인일 등) |
+| 사업성 분석 | 개발수익, 총사업비, 순수익, 비례율 시뮬레이션 |
+| 노후도 조건 | 노후 건축물 현황 및 판정 결과 |
+
+### PDF 보고서
+
+- HTML 템플릿 기반 고품질 문서 생성
+- 차트 및 그래프 포함 (파이차트, 바차트, 라인차트)
+- QR 코드 삽입으로 원본 데이터 접근 지원
+
+---
+
+## 사용자 기능
+
+### 검색 히스토리
+
+- 사용자별 검색 이력 자동 저장
+- 이전 검색 지역 재조회 지원
+- 검색 조건 (폴리곤, 관계 타입) 복원
+
+### 즐겨찾기
+
+- 관심 지역 저장 및 관리
+- 저장된 지역 빠른 접근
+
+### 사용 통계
+
+- 일별/기간별 서비스 사용량 집계
+- 관리자 대시보드에서 통계 조회
 
 ---
 
@@ -223,111 +185,76 @@ admin      → Administrative APIs
 | 항목 | 수치 |
 |------|------|
 | 총 모듈 수 | 8개 (멀티모듈 Gradle) |
-| API 엔드포인트 | 29개 |
+| API 엔드포인트 | 30개 이상 |
 | 처리 데이터 | 정부 공공데이터 10종 이상 |
-| Docker 서비스 | 6개 (API, AI, Auth, ES, Redis, ELK) |
-| 코드 라인 | 30,000줄 이상 |
+| Docker 서비스 | 7개 (API, AI, Auth, ES, Redis, ELK, MCP) |
+| 코드 라인 | 35,000줄 이상 |
 | 개발/운영 기간 | 1년 이상 (현재 운영 중) |
 
 ---
 
-## 적용 기술 요약
+## 적용 기술
 
-| Category | Skills |
-|----------|--------|
-| **Backend** | Spring Boot, Kotlin, RESTful API, Multi-module Architecture |
-| **Data** | Elasticsearch, ETL Pipeline, Data Modeling, GeoShape Query |
-| **DevOps** | Docker, CI/CD, Multi-environment Management, SSL/TLS |
-| **Security** | OAuth2, JWT, RBAC, Keycloak |
-| **AI** | LangChain, OpenAI Integration, MCP, LangSmith |
-| **Monitoring** | ELK Stack, Structured Logging, Kibana Dashboard |
+### Backend
 
----
+| 기술 | 적용 내용 |
+|------|----------|
+| **Spring Boot 3.3** | REST API 서버, 멀티모듈 아키텍처 |
+| **Kotlin** | Null Safety, Data Class, Coroutines |
+| **Spring Security** | OAuth2 Resource Server, JWT 검증 |
+| **Spring Data Elasticsearch** | Repository 패턴, Bulk Upsert |
 
-## API 설계 개요
+### AI / Agent
 
-### API 계층 구조
+| 기술 | 적용 내용 |
+|------|----------|
+| **LangGraph** | 상태 기반 에이전트, Tool Calling, Checkpointer |
+| **LangChain** | 프롬프트 관리, LLM 추상화 |
+| **OpenAI GPT-4o** | 부동산 상담 응답 생성 |
+| **MCP** | Claude Desktop 연동, 외부 클라이언트 지원 |
+| **LangSmith** | LLM 호출 추적, 디버깅 |
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Client Layer                                  │
-│          Web Client │ Mobile Client │ API Testing Tools             │
-└─────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                       Security Layer                                 │
-│              CORS Filter │ OAuth2 Resource Server │ JWT              │
-└─────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                         API Layer                                    │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────────┐   │
-│  │  Auth API     │  │  Reports API  │  │  Download API         │   │
-│  │  토큰 발급    │  │  토지 분석    │  │  Excel/PDF Export     │   │
-│  └───────────────┘  └───────────────┘  └───────────────────────┘   │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────────┐   │
-│  │  User API     │  │  Data API     │  │  Admin API            │   │
-│  │  검색 히스토리│  │  도시계획구역 │  │  통계/관리            │   │
-│  └───────────────┘  └───────────────┘  └───────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────┘
-```
+### Data
 
-### 주요 API 기능
+| 기술 | 적용 내용 |
+|------|----------|
+| **Elasticsearch 8.8** | 문서 저장, 전문 검색, GeoShape Query |
+| **GeoShape Query** | WKT 형식 폴리곤으로 필지/건물 경계 검색 |
+| **ETL Pipeline** | 정부 CSV/SHP 데이터 파싱 및 Bulk 인덱싱 |
+| **Redis** | API 응답 캐싱, AI 세션 상태 관리 |
 
-| API 그룹 | 주요 기능 | 설명 |
-|----------|----------|------|
-| **Reports API** | 지역별 토지 보고서, 사업성 분석 | GeoShape 쿼리 기반 토지 데이터 조회 |
-| **Download API** | Excel/PDF 다운로드 | 분석 결과를 보고서 형태로 내보내기 |
-| **User API** | 검색 히스토리, 즐겨찾기 | 사용자별 검색 기록 관리 |
-| **Data API** | 도시계획구역 조회 | 서울시 정비구역 데이터 제공 |
-| **Admin API** | 사용 통계, 시스템 관리 | 관리자용 대시보드 데이터 |
+### Auth / Security
 
-### 역할 기반 접근 제어 (RBAC)
+| 기술 | 적용 내용 |
+|------|----------|
+| **Keycloak** | IdP, OAuth2/OIDC, 사용자 관리 UI |
+| **RBAC** | guest, user, super_user, admin 4단계 역할 |
+| **JWT** | 토큰 기반 인증, Python/Kotlin 간 공유 |
 
-| 역할 | 기본 API | 프리미엄 기능 | 관리자 기능 |
-|------|----------|--------------|------------|
-| guest | O | X | X |
-| user | O | X | X |
-| super_user | O | O (Excel/PDF Export) | X |
-| admin | X | X | O |
+### DevOps
 
----
+| 기술 | 적용 내용 |
+|------|----------|
+| **Docker Compose** | 멀티 컨테이너 오케스트레이션 |
+| **GitHub Actions** | CI/CD, 태그 기반 자동 배포 |
+| **Self-hosted Runner** | 개인 서버 배포 자동화 |
+| **SSL/TLS** | Let's Encrypt 인증서, HTTPS |
 
-## 인증 시스템 설계
+### Monitoring
 
-### OAuth 2.0 기반 인증 아키텍처
+| 기술 | 적용 내용 |
+|------|----------|
+| **ELK Stack** | 로그 수집/저장/시각화 |
+| **Structured Logging** | Logstash Logback Encoder, JSON 로그 |
+| **Kibana** | 환경별 인덱스 패턴, 대시보드 |
 
-```
-┌─────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Client    │────▶│  Spring Boot    │────▶│    Keycloak     │
-│             │     │  (Resource      │     │  (Identity      │
-│             │◀────│   Server)       │◀────│   Provider)     │
-└─────────────┘     └─────────────────┘     └─────────────────┘
-      │                     │                       │
-      │  1. API Request     │  2. JWT Validation    │
-      │  + Bearer Token     │                       │
-      │                     │  3. Role Extraction   │
-      │                     │                       │
-      │  4. Response        │                       │
-      │◀────────────────────│                       │
-```
+### Document Generation
 
-### 인증 흐름
-
-1. **토큰 발급**: 클라이언트가 Keycloak에 Password Grant 요청
-2. **JWT 수신**: Access Token + Refresh Token 수령
-3. **API 요청**: Bearer Token과 함께 API 호출
-4. **검증**: Spring Security가 JWT 서명 및 만료 검증
-5. **권한 확인**: 토큰 내 역할(Role) 기반 접근 제어
-
-### 보안 특징
-
-- **OAuth 2.0 + OIDC** 표준 준수
-- **JWT 기반** 무상태(Stateless) 인증
-- **역할 기반 접근 제어** (RBAC)
-- **다중 서비스 간 인증 공유** (Spring Boot ↔ FastAPI ↔ MCP Server)
+| 기술 | 적용 내용 |
+|------|----------|
+| **Apache POI** | Excel 보고서 생성 |
+| **OpenHTMLtoPDF** | HTML → PDF 변환 |
+| **QuickChart** | 차트 이미지 생성 API |
 
 ---
 
@@ -353,10 +280,30 @@ admin      → Administrative APIs
 - 장기 누적 효과로 인한 가중치 과대 산정 방지
 - 지역별 고유의 시장 흐름 반영
 
+### 이상치 탐지 및 선형 보간
+
+시계열 데이터(평당 분양가, 가격 히스토리 등)에서 누락된 값과 이상치를 처리하는 알고리즘을 구현했습니다.
+
+**이상치 탐지 (Moving Average 기반):**
+```
+1. 데이터 양 끝에 패딩 추가 (경계 처리)
+2. 윈도우 크기만큼 이동 평균 계산
+3. 이동 평균 대비 80% 이상 벗어난 값을 이상치로 판정
+4. 이상치는 null로 마킹
+```
+
+**선형 보간 (Polynomial Spline):**
+```
+1. 유효한 값만 추출하여 (index, value) 쌍 구성
+2. 다항 스플라인 보간 함수 생성
+3. null 값을 보간 함수로 추정하여 채움
+4. 범위 외 값은 경계값으로 대체
+```
+
 **활용 분야:**
-- 부동산 자산 포트폴리오 평가
-- 담보 가치 평가 및 LTV 산정
-- 투자 의사결정 지원
+- 연도별 평당 분양가격 히스토리에서 누락 데이터 보완
+- 아파트 실거래가 시계열 데이터 정제
+- 차트 시각화를 위한 연속적인 데이터 생성
 
 ---
 
@@ -365,3 +312,4 @@ admin      → Administrative APIs
 - Kubernetes 마이그레이션으로 확장성 확보
 - RAG(Retrieval-Augmented Generation) 도입으로 AI 분석 고도화
 - 실시간 데이터 스트리밍 파이프라인 구축
+- 다국어 지원 (한국어/영어)

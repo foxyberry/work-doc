@@ -1,6 +1,6 @@
 # Rebuild Analytics
 
-> **Urban Redevelopment Feasibility Analysis Platform** - Supporting investment decisions for urban renewal projects through map-based polygon selection
+> **Urban Redevelopment Feasibility Analysis Platform** - Map-based polygon selection for redevelopment investment decision support
 
 ---
 
@@ -8,37 +8,32 @@
 
 ### Overview
 
-Rebuild Analytics is a real estate data analysis service that allows users to intuitively define redevelopment/reconstruction target areas or areas of interest through map-based polygon selection, and instantly view feasibility analysis results for those areas.
+Rebuild Analytics is a real estate data analysis service that allows users to intuitively define redevelopment/reconstruction target areas or regions of interest through map-based polygon selection, and instantly view feasibility analysis results for those areas.
 
-Users simply click on the map to define boundaries, and land registers and feasibility analysis results for that area are automatically generated. The platform provides comprehensive insights based on aging conditions and real estate indices (transaction volume, average age, average sale price) applicable to each region, allowing users to run various profit/loss simulations by adjusting different parameters.
+Users simply click on the map to define boundaries, and the system automatically generates land registers and feasibility analysis results for the selected area. Based on aging conditions and real estate indices (transaction volume, average age, average sale price) applicable to each region, it provides comprehensive insights and enables users to run various profit/loss simulations by adjusting conditions.
 
-### Core Value Propositions
+### Core Value
 
 - **Map-based Polygon Search**: Draw polygons on the map to instantly define redevelopment/reconstruction target areas
-- **Real-time Feasibility Analysis**: Automatically generate comprehensive feasibility analysis results based on land registers, aging conditions, and real estate indices
-- **Profit/Loss Simulation**: Combine various conditions to instantly view profit/loss simulations
-- **Analysis Report Download**: Instantly generate Excel-format analysis reports for easy sharing with third parties
-- **AI-powered Data Interpretation**: LLM automatically explains visualization graphs in natural language, making it easy for non-experts to understand
-- **Integrated Urban Renewal Zone Data**: Reflects Seoul's agenda-processed urban renewal zones, redevelopment promotion districts, and urban development zone lists
+- **Real-time Feasibility Analysis**: Automatically generate comprehensive feasibility analysis based on land registers, aging conditions, and real estate indices
+- **Profit/Loss Simulation**: Run instant profit/loss simulations by combining various conditions
+- **Report Download**: Generate Excel and PDF analysis reports for easy sharing with third parties
+- **AI Real Estate Consultation**: Query regional data in natural language and gain insights through LangGraph-based chatbot
+- **Redevelopment Zone Integration**: Includes Seoul's officially designated redevelopment zones, regeneration promotion districts, and urban development areas
 
-### Product/Service Competitiveness
+### Competitive Advantage
 
-Rebuild Analytics is a data analysis tool specialized for urban renewal projects. Users can freely designate areas of interest in polygon form on the map and instantly view feasibility analysis results for those zones. The platform provides the underlying data (land information, aging status, actual transaction prices, sale prices, etc.) used in the analysis, and results can be downloaded as Excel files, enabling users to simulate various conditions independently or easily share with external experts.
+Rebuild Analytics is a data analysis tool specialized for redevelopment projects. Users can freely designate areas of interest in polygon form on the map and instantly view feasibility analysis results. The underlying data (land information, aging status, actual transaction prices, sale prices, etc.) is provided alongside the analysis, and results can be downloaded as Excel files, enabling users to run their own simulations or easily share with external experts.
 
-**Future Value-Oriented Decision Support**
+**Future Value-Centered Decision Support**
 
-Rebuild Analytics differentiates itself by supporting decision-making centered on future value rather than current market price-based evaluation. As urban aging is expected to accelerate, simply relying on current transaction prices or official land prices is insufficient for assessing regional value. More precise valuation becomes possible only when considering future business potential, including renewal project feasibility, post-redevelopment asset value, and proportional ratios.
+Rebuild Analytics differentiates itself by supporting future value-centered decision-making, moving beyond traditional market price-based evaluations. As urban aging is expected to accelerate, evaluating regional value based solely on current market prices or officially assessed land prices is insufficient. More precise valuations require consideration of redevelopment potential, post-redevelopment asset values, and contribution ratios.
 
-Reflecting this perspective, Rebuild Analytics provides not only current baseline data but also future development potential and profit/loss simulations based on various scenarios, helping users make forward-looking decisions.
+Reflecting this perspective, Rebuild Analytics provides not only current baseline data but also future development potential and profit/loss simulations across various scenarios, helping users make forward-looking decisions.
 
 **Target Users**
 
-Rebuild Analytics is a feasibility review tool for professionals, corporate investors, and individual investors alike, aiming to improve decision-making accuracy and efficiency in the information-asymmetric urban renewal sector.
-
-### Ongoing Experiments
-
-- **LLM-based Automatic Graph Explanation**: Experimenting with a feature that automatically explains visualization graphs from analysis results using LLM. Providing natural language interpretation for metrics and data that users find difficult to understand
-- **MCP (Model Context Protocol) Integration**: Experimenting with connecting self-developed APIs via MCP for Claude client integration. Exploring the potential for users to more easily understand analysis results for specific project sites and expand into chatbot investment consulting
+Rebuild Analytics serves as a feasibility review tool for professionals, corporate investors, and individual investors alike, aiming to improve decision-making accuracy and efficiency in the information-asymmetric redevelopment sector.
 
 ---
 
@@ -46,8 +41,8 @@ Rebuild Analytics is a feasibility review tool for professionals, corporate inve
 
 ```
 Backend       Kotlin, Java 17, Spring Boot 3.3.2, FastAPI
+AI/Agent      LangGraph, LangChain, OpenAI GPT-4o, MCP (Model Context Protocol)
 Data          Elasticsearch 8.8, Redis, PostgreSQL
-AI/ML         LangChain, OpenAI GPT-4, MCP (Model Context Protocol)
 Auth          Keycloak 23.0, OAuth2, JWT, RBAC
 DevOps        Docker, GitHub Actions, Self-hosted Runner
 Document      Apache POI (Excel), OpenHTMLtoPDF, iText7
@@ -55,108 +50,52 @@ Document      Apache POI (Excel), OpenHTMLtoPDF, iText7
 
 ---
 
-## Key Challenges and Solutions
+## AI Consultation Service (LangGraph)
 
-### 1. Processing Unstructured/Large-scale Government Public Data
+### Overview
 
-**Problem:**
-- Government-provided CSV files contain hundreds of thousands to millions of records
-- Each file has different encoding, column structure, and data format
-- Simple parsing causes memory overflow
+A LangGraph-based real estate consultation chatbot that responds to natural language queries based on land/building data for user-selected map regions.
 
-**Solution:**
-- Built custom parser based on OpenCSV with streaming for memory efficiency
-- Designed dedicated mapper classes for each data type (D003, D006, D151, etc.)
-- Batch indexing with Elasticsearch Bulk API for optimized processing speed
-- Added data integrity validation logic to filter missing/erroneous data
+### Key Features
 
-### 2. Building Complex Authentication/Authorization System
+- **Context-based Consultation**: Maintains selected polygon region data in session for multi-turn conversation support
+- **Tool-based Data Retrieval**: LLM determines required information and calls Spring APIs to interpret results
+- **Real-time Streaming**: SSE (Server-Sent Events) based response streaming for fast user experience
+- **Follow-up Suggestions**: Automatically recommends relevant questions based on conversation context
 
-**Problem:**
-- Multiple roles needed: guest, regular user, premium user, admin
-- Authentication sharing required between AI service (Python) and main API (Kotlin)
-- Same authentication system needed for MCP server
+### Architecture
 
-**Solution:**
-- Introduced Keycloak as IdP, compliant with OAuth 2.0 + OIDC standards
-- Implemented RBAC through Spring Security and Keycloak integration
-- Built custom JWT validation middleware for FastAPI
-- Minimized repeated authentication with session token caching on MCP server
-
-**RBAC Structure:**
 ```
-guest      → Basic API Access
-user       → Standard Features
-super_user → Premium (Excel, PDF Export)
-admin      → Administrative APIs
+┌─────────────────────────────────────────────────────────────────┐
+│                        LangGraph Agent                          │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────┐   │
+│  │  Agent Node   │──│  Tool Node    │──│  Checkpointer     │   │
+│  │  (GPT-4o)     │  │  (API Calls)  │  │  (Redis/Memory)   │   │
+│  └───────────────┘  └───────────────┘  └───────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+         │                    │
+         ▼                    ▼
+┌─────────────────┐  ┌─────────────────────────────────────────┐
+│  FastAPI Server │  │            Spring Boot API              │
+│  (SSE Streaming)│  │  Land Summary, Building Info, Aging,    │
+│                 │  │  Feasibility Analysis                   │
+└─────────────────┘  └─────────────────────────────────────────┘
 ```
 
-### 3. Unified Log Management Across Multiple Environments
+### Available Tools
 
-**Problem:**
-- Logs scattered across Dev, Stage, Prod environments
-- Required accessing multiple servers to check logs during incidents
-- Text logs difficult to search/analyze
+| Tool | Description |
+|------|-------------|
+| `get_land_summary` | Retrieve land summary for selected area |
+| `get_land_summary_analysis` | Retrieve feasibility analysis results |
+| `get_building_info` | Retrieve building detail information |
+| `check_aging_building` | Check aging building status |
+| `get_jibun_report` | Retrieve lot-by-lot detailed report |
+| `convert_units` | Convert area/price units |
 
-**Solution:**
-- Self-built ELK Stack (Elasticsearch + Logstash + Kibana)
-- JSON structured log transmission with Logstash Logback Encoder
-- Environment-specific TCP port separation (dev:4560, prod:4561, stage:4562)
-- Environment-specific index patterns enabling unified search in Kibana
+### MCP (Model Context Protocol) Integration
 
-### 4. AI Service Integration with Existing System
-
-**Problem:**
-- Needed to add GPT-powered land analysis functionality
-- Required seamless integration with existing Spring Boot API
-- Wanted to enable direct data queries from Claude Desktop
-
-**Solution:**
-- Built separate AI service with LangChain + FastAPI
-- Exposed Chains as REST API via LangServe
-- Implemented MCP (Model Context Protocol) server for Claude Desktop integration
-- LangSmith integration for tracking and debugging all LLM calls
-
-### 5. Multi-Environment Deployment Automation
-
-**Problem:**
-- HTTPS service needed on personal server, not cloud
-- Manual deployment has high error potential and is time-consuming
-
-**Solution:**
-- Manual issuance and renewal of free SSL certificates via Let's Encrypt
-- Built CI/CD pipeline with GitHub Actions + Self-hosted Runner
-- Automatic deployment trigger on Git tag creation
-- PKCS12 Keystore conversion automation (using GitHub Secrets)
-
-**Environment Configuration:**
-
-| Env | Port | Protocol | Purpose |
-|-----|------|----------|---------|
-| Local | 8080 | HTTP | IDE Development |
-| Dev | 8080 | HTTP | Docker Testing |
-| Stage | 9442 | HTTPS | Pre-production Validation |
-| Prod | 9443 | HTTPS | Production (Full Stack + AI) |
-
----
-
-## Technology Selection Rationale
-
-### Kotlin + Spring Boot
-- **Reason**: Extensive experience with Kotlin + Spring combination
-- **Result**: Virtually no runtime NullPointerExceptions
-
-### Elasticsearch
-- **Reason**: Korean morphological analysis support, location-based search via GeoShape queries
-- **Result**: Millisecond-level search responses across millions of records
-
-### Keycloak
-- **Reason**: Full OAuth 2.0/OIDC support, built-in RBAC, management UI provided
-- **Result**: Implemented complex role-based access control through configuration alone
-
-### LangChain + MCP
-- **Reason**: De facto standard for LLM applications, direct Claude integration via MCP
-- **Result**: Prompt management, call tracking, diverse client support
+Provides an MCP server enabling direct land data queries from Claude Desktop and other MCP clients. Shares the same API client code to ensure consistent data access.
 
 ---
 
@@ -165,15 +104,15 @@ admin      → Administrative APIs
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        Client Applications                          │
+│            Web App (Next.js)  │  Claude Desktop (MCP)               │
 └─────────────────────────────────────────────────────────────────────┘
                                    │
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                       Application Layer                             │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────┐ │
-│  │  Spring Boot    │  │  FastAPI        │  │  MCP Server         │ │
-│  │  REST API       │  │  AI Service     │  │  Claude Integration │ │
-│  │  (:9443)        │  │  (:8123)        │  │                     │ │
+│  │  Spring Boot    │  │  LangGraph      │  │  MCP Server         │ │
+│  │  REST API       │◄─│  AI Chatbot     │  │  Claude Integration │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────┘
                                    │
@@ -194,174 +133,184 @@ admin      → Administrative APIs
 │  └───────────────────────────┘  └───────────────────────────────┘  │
 │  ┌─────────────────┐  ┌───────────────────────────────────────┐    │
 │  │      Redis      │  │       External APIs                   │    │
-│  │     (Cache)     │  │  OpenAI │ Map API │ Government Data   │    │
+│  │  (Cache/Session)│  │  OpenAI │ Map API │ Government Data   │    │
 │  └─────────────────┘  └───────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Project Structure
+## Report Generation
 
-```
-├── application/          # Spring Boot REST API
-├── batch/etl/            # Data Pipeline (Picocli CLI)
-├── common/
-│   ├── csv-reader/       # Government CSV Parser
-│   ├── es/               # Elasticsearch Integration
-│   ├── generator/        # Report Engine (PDF, Excel)
-│   ├── model/            # Shared DTOs & Entities
-│   └── redis/            # Cache Module
-├── langchain/            # AI Service (FastAPI + LangChain)
-└── mcp-server/           # Model Context Protocol Server
-```
+Analysis results can be downloaded in various formats.
+
+### Excel Reports
+
+| Sheet | Contents |
+|-------|----------|
+| Land Summary | Comprehensive info: lot count, area, floor area ratio, aging rate |
+| Building Info | Building details (structure, floors, approval date, etc.) |
+| Feasibility Analysis | Development revenue, total cost, net profit, contribution ratio simulation |
+| Aging Conditions | Aging building status and determination results |
+
+### PDF Reports
+
+- High-quality document generation based on HTML templates
+- Includes charts and graphs (pie, bar, line charts)
+- QR code insertion for original data access
 
 ---
 
-## Project Achievements
+## User Features
 
-| Metric | Value |
-|--------|-------|
+### Search History
+
+- Automatic per-user search history storage
+- Re-query support for previous search regions
+- Search condition restoration (polygon, relation type)
+
+### Favorites
+
+- Save and manage regions of interest
+- Quick access to saved regions
+
+### Usage Statistics
+
+- Daily/periodic service usage aggregation
+- Statistics viewing from admin dashboard
+
+---
+
+## Project Metrics
+
+| Item | Value |
+|------|-------|
 | Total Modules | 8 (Multi-module Gradle) |
-| API Endpoints | 29 |
-| Data Processed | 10+ types of government public data |
-| Docker Services | 6 (API, AI, Auth, ES, Redis, ELK) |
-| Lines of Code | 30,000+ |
-| Development/Operation Period | 1+ year (currently in production) |
+| API Endpoints | 30+ |
+| Processed Data | 10+ types of government public data |
+| Docker Services | 7 (API, AI, Auth, ES, Redis, ELK, MCP) |
+| Lines of Code | 35,000+ |
+| Development/Operation | 1+ years (currently in production) |
 
 ---
 
-## Applied Technologies Summary
+## Applied Technologies
 
-| Category | Skills |
-|----------|--------|
-| **Backend** | Spring Boot, Kotlin, RESTful API, Multi-module Architecture |
-| **Data** | Elasticsearch, ETL Pipeline, Data Modeling, GeoShape Query |
-| **DevOps** | Docker, CI/CD, Multi-environment Management, SSL/TLS |
-| **Security** | OAuth2, JWT, RBAC, Keycloak |
-| **AI** | LangChain, OpenAI Integration, MCP, LangSmith |
-| **Monitoring** | ELK Stack, Structured Logging, Kibana Dashboard |
+### Backend
 
----
+| Technology | Application |
+|------------|-------------|
+| **Spring Boot 3.3** | REST API server, multi-module architecture |
+| **Kotlin** | Null Safety, Data Class, Coroutines |
+| **Spring Security** | OAuth2 Resource Server, JWT validation |
+| **Spring Data Elasticsearch** | Repository pattern, Bulk Upsert |
 
-## API Design Overview
+### AI / Agent
 
-### API Layer Architecture
+| Technology | Application |
+|------------|-------------|
+| **LangGraph** | State-based agent, Tool Calling, Checkpointer |
+| **LangChain** | Prompt management, LLM abstraction |
+| **OpenAI GPT-4o** | Real estate consultation response generation |
+| **MCP** | Claude Desktop integration, external client support |
+| **LangSmith** | LLM call tracking, debugging |
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Client Layer                                  │
-│          Web Client │ Mobile Client │ API Testing Tools             │
-└─────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                       Security Layer                                 │
-│              CORS Filter │ OAuth2 Resource Server │ JWT              │
-└─────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                         API Layer                                    │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────────┐   │
-│  │  Auth API     │  │  Reports API  │  │  Download API         │   │
-│  │  Token Issue  │  │  Land Analysis│  │  Excel/PDF Export     │   │
-│  └───────────────┘  └───────────────┘  └───────────────────────┘   │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────────┐   │
-│  │  User API     │  │  Data API     │  │  Admin API            │   │
-│  │  Search Hist. │  │  Urban Zones  │  │  Statistics/Mgmt      │   │
-│  └───────────────┘  └───────────────┘  └───────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────┘
-```
+### Data
 
-### Main API Functions
+| Technology | Application |
+|------------|-------------|
+| **Elasticsearch 8.8** | Document storage, full-text search, GeoShape Query |
+| **GeoShape Query** | Lot/building boundary search with WKT polygons |
+| **ETL Pipeline** | Government CSV/SHP data parsing and bulk indexing |
+| **Redis** | API response caching, AI session state management |
 
-| API Group | Key Features | Description |
-|-----------|--------------|-------------|
-| **Reports API** | Regional land reports, feasibility analysis | Land data queries based on GeoShape queries |
-| **Download API** | Excel/PDF download | Export analysis results as reports |
-| **User API** | Search history, favorites | User-specific search record management |
-| **Data API** | Urban planning zone queries | Seoul urban renewal zone data |
-| **Admin API** | Usage statistics, system management | Admin dashboard data |
+### Auth / Security
 
-### Role-Based Access Control (RBAC)
+| Technology | Application |
+|------------|-------------|
+| **Keycloak** | IdP, OAuth2/OIDC, user management UI |
+| **RBAC** | 4-tier roles: guest, user, super_user, admin |
+| **JWT** | Token-based auth, shared between Python/Kotlin |
 
-| Role | Basic API | Premium Features | Admin Features |
-|------|-----------|------------------|----------------|
-| guest | O | X | X |
-| user | O | X | X |
-| super_user | O | O (Excel/PDF Export) | X |
-| admin | X | X | O |
+### DevOps
 
----
+| Technology | Application |
+|------------|-------------|
+| **Docker Compose** | Multi-container orchestration |
+| **GitHub Actions** | CI/CD, tag-based auto deployment |
+| **Self-hosted Runner** | Personal server deployment automation |
+| **SSL/TLS** | Let's Encrypt certificates, HTTPS |
 
-## Authentication System Design
+### Monitoring
 
-### OAuth 2.0-based Authentication Architecture
+| Technology | Application |
+|------------|-------------|
+| **ELK Stack** | Log collection/storage/visualization |
+| **Structured Logging** | Logstash Logback Encoder, JSON logs |
+| **Kibana** | Environment-specific index patterns, dashboards |
 
-```
-┌─────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Client    │────▶│  Spring Boot    │────▶│    Keycloak     │
-│             │     │  (Resource      │     │  (Identity      │
-│             │◀────│   Server)       │◀────│   Provider)     │
-└─────────────┘     └─────────────────┘     └─────────────────┘
-      │                     │                       │
-      │  1. API Request     │  2. JWT Validation    │
-      │  + Bearer Token     │                       │
-      │                     │  3. Role Extraction   │
-      │                     │                       │
-      │  4. Response        │                       │
-      │◀────────────────────│                       │
-```
+### Document Generation
 
-### Authentication Flow
-
-1. **Token Issuance**: Client requests Password Grant from Keycloak
-2. **JWT Reception**: Receives Access Token + Refresh Token
-3. **API Request**: API call with Bearer Token
-4. **Validation**: Spring Security verifies JWT signature and expiration
-5. **Authorization**: Role-based access control from token claims
-
-### Security Features
-
-- **OAuth 2.0 + OIDC** standard compliance
-- **JWT-based** stateless authentication
-- **Role-Based Access Control** (RBAC)
-- **Cross-service authentication sharing** (Spring Boot ↔ FastAPI ↔ MCP Server)
+| Technology | Application |
+|------------|-------------|
+| **Apache POI** | Excel report generation |
+| **OpenHTMLtoPDF** | HTML → PDF conversion |
+| **QuickChart** | Chart image generation API |
 
 ---
 
-## Data Analysis Model
+## Data Analysis Models
 
 ### Regional Price Adjustment Model
 
-Developed a model that adjusts the gap between official assessed prices and actual market prices using the Korea Real Estate Board's apartment transaction price index.
+Developed a model that adjusts the gap between officially assessed prices and actual market prices using Korea Real Estate Board's apartment sale price index.
 
 **Background:**
-- Official prices are assessed annually, failing to reflect rapidly changing market conditions
-- Limited ability to capture different price fluctuation rates by region
-- Stark contrasts within Seoul: Seocho-gu (+17.3%) vs Dobong-gu (-14.0%)
+- Officially assessed prices are calculated annually and fail to reflect rapidly changing market conditions
+- Limited ability to capture varying price fluctuation rates by region
+- Stark differences exist even within Seoul: Seocho-gu (+17.3%) vs Dobong-gu (-14.0%)
 
 **Core Algorithm:**
 ```
-Adjustment Weight (W) = (1 ÷ Realization Rate) × (Current Price Index ÷ Assessment Date Price Index)
-Adjusted Price = Official Price × W
+Adjustment Weight (W) = (1 ÷ Realization Rate) × (Current Sale Index ÷ Assessment Date Sale Index)
+Adjusted Price = Officially Assessed Price × W
 ```
 
 **Model Characteristics:**
-- Adjusts only for pure market changes after official price assessment
-- Prevents weight overestimation from long-term cumulative effects
+- Adjusts only for pure market fluctuations after official assessment
+- Prevents weight overestimation due to long-term cumulative effects
 - Reflects region-specific market trends
 
-**Application Areas:**
-- Real estate asset portfolio valuation
-- Collateral value assessment and LTV calculation
-- Investment decision support
+### Outlier Detection and Linear Interpolation
+
+Implemented algorithms to handle missing values and outliers in time-series data (price per pyeong, price history, etc.).
+
+**Outlier Detection (Moving Average-based):**
+```
+1. Add padding to data edges (boundary handling)
+2. Calculate moving average over window size
+3. Mark values deviating 80%+ from moving average as outliers
+4. Mark outliers as null
+```
+
+**Linear Interpolation (Polynomial Spline):**
+```
+1. Extract valid values as (index, value) pairs
+2. Generate polynomial spline interpolation function
+3. Fill null values using interpolation function estimates
+4. Replace out-of-range values with boundary values
+```
+
+**Applications:**
+- Fill missing data in yearly price-per-pyeong history
+- Clean apartment transaction time-series data
+- Generate continuous data for chart visualization
 
 ---
 
-## Future Development Roadmap
+## Future Development
 
 - Kubernetes migration for scalability
-- RAG (Retrieval-Augmented Generation) introduction for enhanced AI analysis
+- RAG (Retrieval-Augmented Generation) integration for enhanced AI analysis
 - Real-time data streaming pipeline construction
+- Multi-language support (Korean/English)
