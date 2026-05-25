@@ -1,316 +1,302 @@
 # Rebuild Analytics
 
-> **Urban Redevelopment Feasibility Analysis Platform** - Map-based polygon selection for redevelopment investment decision support
+> **A B2B analytics SaaS purpose-built for feasibility review of urban redevelopment, reconstruction, and development projects.**
+> Scattered data in one place, instant recalculation on every condition change, ready-to-share reports in a single click.
+
+Rebuild Analytics is an analytics SaaS purpose-built for feasibility review of urban redevelopment, reconstruction, and development projects.
+
+The core of the service is a **parcel-level data pipeline**. It consolidates fragmented government data on land, buildings, transactions, and renewal zones into a single workspace, structures it into a review-ready form, and processes it through our proprietary analytic indicators — delivering data that reconstruction associations, developers, and investors can apply directly to investment decisions.
 
 ---
 
-## Project Overview
+## Why Feasibility Review Matters
 
-### Overview
+Urban renewal projects unfold over multiple years, often more than a decade. At the construction and contractor scale, trillions of won in capital are committed, and the accuracy of early feasibility judgment is directly reflected in the project's overall ROI.
 
-Rebuild Analytics is a real estate data analysis service that allows users to intuitively define redevelopment/reconstruction target areas or regions of interest through map-based polygon selection, and instantly view feasibility analysis results for those areas.
+Feasibility review is not a one-time event. As conditions shift through site identification, association consensus, contractor negotiation, and financing, the analysis must be rerun at each stage. Handling these iterations manually inflates not only the time cost but also the risk of data omissions and calculation errors.
 
-Users simply click on the map to define boundaries, and the system automatically generates land registers and feasibility analysis results for the selected area. Based on aging conditions and real estate indices (transaction volume, average age, average sale price) applicable to each region, it provides comprehensive insights and enables users to run various profit/loss simulations by adjusting conditions.
-
-### Core Value
-
-- **Map-based Polygon Search**: Draw polygons on the map to instantly define redevelopment/reconstruction target areas
-- **Real-time Feasibility Analysis**: Automatically generate comprehensive feasibility analysis based on land registers, aging conditions, and real estate indices
-- **Profit/Loss Simulation**: Run instant profit/loss simulations by combining various conditions
-- **Report Download**: Generate Excel and PDF analysis reports for easy sharing with third parties
-- **AI Real Estate Consultation**: Query regional data in natural language and gain insights through LangGraph-based chatbot
-- **Redevelopment Zone Integration**: Includes Seoul's officially designated redevelopment zones, regeneration promotion districts, and urban development areas
-
-### Competitive Advantage
-
-Rebuild Analytics is a data analysis tool specialized for redevelopment projects. Users can freely designate areas of interest in polygon form on the map and instantly view feasibility analysis results. The underlying data (land information, aging status, actual transaction prices, sale prices, etc.) is provided alongside the analysis, and results can be downloaded as Excel files, enabling users to run their own simulations or easily share with external experts.
-
-**Future Value-Centered Decision Support**
-
-Rebuild Analytics differentiates itself by supporting future value-centered decision-making, moving beyond traditional market price-based evaluations. As urban aging is expected to accelerate, evaluating regional value based solely on current market prices or officially assessed land prices is insufficient. More precise valuations require consideration of redevelopment potential, post-redevelopment asset values, and contribution ratios.
-
-Reflecting this perspective, Rebuild Analytics provides not only current baseline data but also future development potential and profit/loss simulations across various scenarios, helping users make forward-looking decisions.
-
-**Target Users**
-
-Rebuild Analytics serves as a feasibility review tool for professionals, corporate investors, and individual investors alike, aiming to improve decision-making accuracy and efficiency in the information-asymmetric redevelopment sector.
+Rebuild Analytics automates this iterative review, providing **immediate recalculation on condition changes** and **a consistent output format across all stages**.
 
 ---
 
-## Tech Stack
+## Time That Leaks Before Decisions
 
-```
-Backend       Kotlin, Java 17, Spring Boot 3.3.2, FastAPI
-AI/Agent      LangGraph, LangChain, OpenAI GPT-4o, MCP (Model Context Protocol)
-Data          Elasticsearch 8.8, Redis, PostgreSQL
-Auth          Keycloak 23.0, OAuth2, JWT, RBAC
-DevOps        Docker, GitHub Actions, Self-hosted Runner
-Document      Apache POI (Excel), OpenHTMLtoPDF, iText7
-```
+The first round of feasibility review takes more time in re-organization than in calculation. Aligning data sources, adjusting conditions, and reformatting for reporting — while these accumulate, the decision window passes.
+
+Rebuild Analytics addresses these three bottlenecks head-on.
 
 ---
 
-## AI Consultation Service (LangGraph)
+### Find Where Value Is Hidden
 
-### Overview
+Map-based area exploration lets you instantly identify regions with development potential or hidden value. Our proprietary analytic indicators surface undervalued candidate sites that market prices alone cannot reveal, and intuitive color layers make wide-area scanning possible from a single screen.
 
-A LangGraph-based real estate consultation chatbot that responds to natural language queries based on land/building data for user-selected map regions.
+### Stop Rebuilding Decision Materials From Scratch
 
-### Key Features
+Pull together scattered government data and analysis results into Excel or PDF reports with a single click. They come out in a form ready to send to outside advisors or submit to internal stakeholders, and every condition change regenerates the report. The work of gathering and reorganizing data folds into report generation itself, leaving that time for the actual decision review.
 
-- **Context-based Consultation**: Maintains selected polygon region data in session for multi-turn conversation support
-- **Tool-based Data Retrieval**: LLM determines required information and calls Spring APIs to interpret results
-- **Real-time Streaming**: SSE (Server-Sent Events) based response streaming for fast user experience
-- **Follow-up Suggestions**: Automatically recommends relevant questions based on conversation context
+### Let AI Handle the First Question
 
-### Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        LangGraph Agent                          │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────┐   │
-│  │  Agent Node   │──│  Tool Node    │──│  Checkpointer     │   │
-│  │  (GPT-4o)     │  │  (API Calls)  │  │  (Redis/Memory)   │   │
-│  └───────────────┘  └───────────────┘  └───────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-         │                    │
-         ▼                    ▼
-┌─────────────────┐  ┌─────────────────────────────────────────┐
-│  FastAPI Server │  │            Spring Boot API              │
-│  (SSE Streaming)│  │  Land Summary, Building Info, Aging,    │
-│                 │  │  Feasibility Analysis                   │
-└─────────────────┘  └─────────────────────────────────────────┘
-```
-
-### Available Tools
-
-| Tool | Description |
-|------|-------------|
-| `get_land_summary` | Retrieve land summary for selected area |
-| `get_land_summary_analysis` | Retrieve feasibility analysis results |
-| `get_building_info` | Retrieve building detail information |
-| `check_aging_building` | Check aging building status |
-| `get_jibun_report` | Retrieve lot-by-lot detailed report |
-| `convert_units` | Convert area/price units |
-
-### MCP (Model Context Protocol) Integration
-
-Provides an MCP server enabling direct land data queries from Claude Desktop and other MCP clients. Shares the same API client code to ensure consistent data access.
+"What's the average building age in this area?" "How does the feasibility compare to similar conditions?" — natural-language questions get natural-language answers. The selected region's context is preserved across the entire conversation, compressing the initial step of finding, computing, and interpreting data.
 
 ---
 
-## System Architecture
+## Who It's For
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Client Applications                          │
-│            Web App (Next.js)  │  Claude Desktop (MCP)               │
-└─────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                       Application Layer                             │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────┐ │
-│  │  Spring Boot    │  │  LangGraph      │  │  MCP Server         │ │
-│  │  REST API       │◄─│  AI Chatbot     │  │  Claude Integration │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Common Modules                               │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │
-│  │csv-reader│ │    es    │ │generator │ │  model   │ │  redis   │  │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                       Infrastructure Layer                          │
-│  ┌───────────────────────────┐  ┌───────────────────────────────┐  │
-│  │       ELK Stack           │  │       Auth Stack              │  │
-│  │  ES │ Logstash │ Kibana   │  │  Keycloak │ PostgreSQL        │  │
-│  └───────────────────────────┘  └───────────────────────────────┘  │
-│  ┌─────────────────┐  ┌───────────────────────────────────────┐    │
-│  │      Redis      │  │       External APIs                   │    │
-│  │  (Cache/Session)│  │  OpenAI │ Map API │ Government Data   │    │
-│  └─────────────────┘  └───────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Organization | How They Use It |
+|---|---|
+| **Reconstruction associations & preparation committees** | Quickly draft member reports and decision materials, with proprietary analytic evidence attached |
+| **Developer business development teams** | Identify new candidate sites at the regional level, compare profit/loss across business conditions in short cycles |
+| **Real estate investment review teams** | Apply quantitative indicators for objective candidate evaluation before investment decisions |
+| **Consulting & advisory firms** | Produce client-ready reports on demand, reinforced with proprietary analytic backing |
+
+→ Suited to any organization that needs to shorten the first stage of feasibility review.
 
 ---
 
-## Report Generation
+## Key Capabilities
 
-Analysis results can be downloaded in various formats.
+Every capability in Rebuild Analytics is wired to **the actual review flow of redevelopment, reconstruction, and development projects**. Discover candidates on the map, select areas by polygon, validate integrated data and renewal zone status, simulate scenarios, generate reports, and query AI — all in the same workspace.
 
-### Excel Reports
+### 1. Map-Based Value Discovery (MapLayer) — *Initial candidate screening*
+
+The entry point for discovering candidates at scale. At each zoom level, pre-aggregated indicators across city, district, dong (administrative unit), and parcel scales are rendered in color — making "where to look first" visible without further analysis.
+
+| Capability | Detail |
+|------|------|
+| 4-level zoom statistics | Pre-aggregated indicators at city, district, dong, and parcel scale |
+| Proprietary indicator overlay | Discovery Score (value discovery), Land Leverage Score (redevelopment potential), and more |
+| Color-based exploration | Identify high-scoring areas at a glance across wide regions |
+| Score filtering | Highlight only the score range of interest with custom thresholds |
+| Polygon-search handoff | A single click takes the discovered area directly into detailed analysis |
+
+→ Candidates discovered on the map flow seamlessly into detailed analysis with no break.
+
+### 2. Integrated Land & Building Data — *Detailed candidate review*
+
+Draw a polygon, or select an administrative or renewal zone directly, and every land and building record inside is normalized and laid out on one screen.
+
+| Item | Detail |
+|------|------|
+| Area input methods | Freehand polygon, administrative boundary, renewal zone, district unit plan area |
+| Land data | Official land price, zoning, area, ownership type, land category & shape |
+| Building data | Structure, floor count, approval date, total floor area, aging grade |
+| Data integrity | Over 10 government public datasets unified through our own ETL. For any given parcel, land, building, transaction, and aging information are linked via consistent identifiers — no mismatches or omissions |
+
+→ The work of finding and reconciling records source by source is automated, compressing the first round of review.
+
+### 3. Renewal Zone & Urban Planning Integration — *Conflict & adjacency check*
+
+Confirm overlaps with existing or pending renewal zones, and adjacent project activity, on the same screen — no separate lookups required.
+
+- Seoul renewal zones (redevelopment, reconstruction, and others officially designated)
+- Regeneration promotion districts
+- Urban development areas
+- District unit plan areas
+
+→ Instantly determine whether a candidate conflicts with another project, or whether adjacent activity will affect its value.
+
+### 4. Feasibility Scenario Simulation — *Profitability calculation & condition review*
+
+Combine the core conditions of a selected area to instantly compute scenario-level profit and loss. Once an area is set, only conditions need to change — results regenerate automatically.
+
+| Item | Detail |
+|------|------|
+| Input parameters | Floor area ratio, sale price per pyeong, construction cost per pyeong, project duration, contribution ratio, etc. |
+| Output indicators | Development profit, total project cost, net profit, contribution ratio, return per pyeong |
+| Land register auto-generation | Ownership, area, zoning, and aging status for every parcel inside the selected area |
+| Instant update | Condition changes update the simulation, land register, and report simultaneously |
+
+→ A single setup effort lets you compare multiple conditions in parallel.
+
+### 5. Excel & PDF Report Download — *Internal reporting & external advisory hand-off*
+
+Receive analysis output with a single click — ready to send to outside advisors or submit internally as-is.
+
+**Excel report (4 sheets)**
 
 | Sheet | Contents |
-|-------|----------|
-| Land Summary | Comprehensive info: lot count, area, floor area ratio, aging rate |
-| Building Info | Building details (structure, floors, approval date, etc.) |
-| Feasibility Analysis | Development revenue, total cost, net profit, contribution ratio simulation |
-| Aging Conditions | Aging building status and determination results |
+|------|----------|
+| Land summary | Parcel count, area, FAR, aging ratio, and other consolidated information |
+| Building information | Per-building details (structure, floor count, approval date, etc.) |
+| Feasibility analysis | Development profit, total cost, net profit, contribution ratio results |
+| Aging conditions | Aging building status and evaluation results |
 
-### PDF Reports
+→ Submittable directly to decision-makers, or reusable externally for further simulation.
 
-- High-quality document generation based on HTML templates
-- Includes charts and graphs (pie, bar, line charts)
-- QR code insertion for original data access
+**PDF report**
 
----
+- High-quality output based on HTML templates
+- Auto-inserted charts and graphs (pie, bar, line)
+- QR codes linking back to the original analysis page
+- Optimized for external sharing and print distribution
 
-## User Features
+→ Every condition change regenerates the report, eliminating the separate work of redrafting submission materials.
 
-### Search History
+### 6. AI Real Estate Consultation — *Question response & review acceleration*
 
-- Automatic per-user search history storage
-- Re-query support for previous search regions
-- Search condition restoration (polygon, relation type)
+Query the selected region's data in natural language. A conversational interface that bypasses menu navigation — used at both the first review and follow-up stages.
 
-### Favorites
+**Example tasks**
 
-- Save and manage regions of interest
-- Quick access to saved regions
+| Question type | Example |
+|------|------|
+| Statistics & summary | "What's the average building age in this area?" "What's the total parcel count and area?" |
+| Feasibility interpretation | "What contribution ratio do these conditions produce?" |
+| Candidate recommendation | "Recommend other candidate sites with similar feasibility profiles" |
+| Next-action guidance | "I'd like to download these results as Excel" |
 
-### Usage Statistics
+**Conversation characteristics**
 
-- Daily/periodic service usage aggregation
-- Statistics viewing from admin dashboard
+- The selected region's context is preserved throughout the dialogue
+- Streaming responses for fast perceived speed
+- Auto-suggested follow-up questions deepen the analysis
+- The same analytical data is accessible from external clients (MCP-compatible)
 
----
+→ No time spent locating new data menus — answers arrive the moment you ask.
 
-## Project Metrics
+### 7. Workflow Continuity (History · Favorites · Access Control) — *Follow-up review cycle operations*
 
-| Item | Value |
-|------|-------|
-| Total Modules | 8 (Multi-module Gradle) |
-| API Endpoints | 30+ |
-| Processed Data | 10+ types of government public data |
-| Docker Services | 7 (API, AI, Auth, ES, Redis, ELK, MCP) |
-| Lines of Code | 35,000+ |
-| Development/Operation | 1+ years (currently in production) |
+Reopen previous reviews under the same conditions at any time; gather areas of interest into a single managed view.
 
----
+| Capability | Detail |
+|------|------|
+| Search history | Automatic logging of each user's search activity, with re-execution under identical conditions |
+| Favorites | Save and quickly access regions of interest |
+| Usage statistics | Daily and period-based usage aggregation (admin dashboard) |
+| Access control | 4-tier RBAC: guest, user, enterprise, admin |
 
-## Applied Technologies
-
-### Backend
-
-| Technology | Application |
-|------------|-------------|
-| **Spring Boot 3.3** | REST API server, multi-module architecture |
-| **Kotlin** | Null Safety, Data Class, Coroutines |
-| **Spring Security** | OAuth2 Resource Server, JWT validation |
-| **Spring Data Elasticsearch** | Repository pattern, Bulk Upsert |
-
-### AI / Agent
-
-| Technology | Application |
-|------------|-------------|
-| **LangGraph** | State-based agent, Tool Calling, Checkpointer |
-| **LangChain** | Prompt management, LLM abstraction |
-| **OpenAI GPT-4o** | Real estate consultation response generation |
-| **MCP** | Claude Desktop integration, external client support |
-| **LangSmith** | LLM call tracking, debugging |
-
-### Data
-
-| Technology | Application |
-|------------|-------------|
-| **Elasticsearch 8.8** | Document storage, full-text search, GeoShape Query |
-| **GeoShape Query** | Lot/building boundary search with WKT polygons |
-| **ETL Pipeline** | Government CSV/SHP data parsing and bulk indexing |
-| **Redis** | API response caching, AI session state management |
-
-### Auth / Security
-
-| Technology | Application |
-|------------|-------------|
-| **Keycloak** | IdP, OAuth2/OIDC, user management UI |
-| **RBAC** | 4-tier roles: guest, user, super_user, admin |
-| **JWT** | Token-based auth, shared between Python/Kotlin |
-
-### DevOps
-
-| Technology | Application |
-|------------|-------------|
-| **Docker Compose** | Multi-container orchestration |
-| **GitHub Actions** | CI/CD, tag-based auto deployment |
-| **Self-hosted Runner** | Personal server deployment automation |
-| **SSL/TLS** | Let's Encrypt certificates, HTTPS |
-
-### Monitoring
-
-| Technology | Application |
-|------------|-------------|
-| **ELK Stack** | Log collection/storage/visualization |
-| **Structured Logging** | Logstash Logback Encoder, JSON logs |
-| **Kibana** | Environment-specific index patterns, dashboards |
-
-### Document Generation
-
-| Technology | Application |
-|------------|-------------|
-| **Apache POI** | Excel report generation |
-| **OpenHTMLtoPDF** | HTML → PDF conversion |
-| **QuickChart** | Chart image generation API |
+→ Once-organized analysis carries directly into the next review cycle.
 
 ---
 
-## Data Analysis Models
+## Proprietary Analytic Models
+
+The analytic indicators in Rebuild Analytics are **proprietary models built to quantitatively evaluate redevelopment and reconstruction potential**, going one step beyond simple price lookup.
+
+### Discovery Score
+
+**Problem it solves** — Automatically surfaces high-potential candidate sites invisible to price comparison alone.
+
+**Signals considered** — Multi-source data spanning price, building characteristics, and regional context, distilled into a quantitative score answering "is this parcel a viable next-project candidate?"
+
+**B2B applications**
+- **Wide-area candidate discovery**: Identify high-scoring areas at a glance on the map
+- **Quantitative comparison basis**: Compare multiple candidates against the same objective scale
+- **External reporting**: Include scores directly in decision materials
+
+### Land Leverage Score
+
+**Problem it solves** — Identifies parcels where the building underperforms the land — i.e., where the redevelopment option carries significant value.
+
+**Signals considered** — A proprietary scoring model that implements the **Land Leverage** concept from real estate economics (Munneke & Womack, *Real Estate Economics* 48(1), 2020), adapted to Korean official appraisal data.
+
+**B2B applications**
+- **Pre-consensus candidate discovery**: Identify candidate sites before the market converges
+- **Cross-validation with Discovery Score**: Prioritize parcels where both signals point strongly
+- **External reporting**: A quantitative indicator backed by academically validated concepts
 
 ### Regional Price Adjustment Model
 
-Developed a model that adjusts the gap between officially assessed prices and actual market prices using Korea Real Estate Board's apartment sale price index.
+A model that adjusts the gap between officially assessed prices and actual market prices using the Korea Real Estate Board's apartment transaction price index.
 
-**Background:**
-- Officially assessed prices are calculated annually and fail to reflect rapidly changing market conditions
-- Limited ability to capture varying price fluctuation rates by region
-- Stark differences exist even within Seoul: Seocho-gu (+17.3%) vs Dobong-gu (-14.0%)
+**Why it matters:**
+- Official appraisals are conducted annually and lag fast-moving market conditions
+- Regional price volatility varies sharply (e.g., +17.3% in Seocho vs. −14.0% in Dobong)
 
-**Core Algorithm:**
-```
-Adjustment Weight (W) = (1 ÷ Realization Rate) × (Current Sale Index ÷ Assessment Date Sale Index)
-Adjusted Price = Officially Assessed Price × W
-```
+**Model characteristics:**
+- Corrects only for pure market drift since the official appraisal date
+- Prevents weight inflation from long-term cumulative effects
+- Reflects each region's distinct market trajectory
 
-**Model Characteristics:**
-- Adjusts only for pure market fluctuations after official assessment
-- Prevents weight overestimation due to long-term cumulative effects
-- Reflects region-specific market trends
+### Time-Series Data Cleansing
 
-### Outlier Detection and Linear Interpolation
+Automatically corrects gaps and outliers common in time-series data — yearly sale prices per pyeong, transaction histories, etc. — ensuring **consistent flow in analysis and charts**.
 
-Implemented algorithms to handle missing values and outliers in time-series data (price per pyeong, price history, etc.).
+**B2B applications**
+- **Trend analysis**: Prevents misreading caused by data gaps
+- **Chart visualization**: Continuous time series for external reports and presentations
+- **Simulation stability**: Avoids distortion from outlier values
 
-**Outlier Detection (Moving Average-based):**
-```
-1. Add padding to data edges (boundary handling)
-2. Calculate moving average over window size
-3. Mark values deviating 80%+ from moving average as outliers
-4. Mark outliers as null
-```
+→ Government and market data gaps or anomalies are corrected automatically, removing the need for separate data-integrity validation.
 
-**Linear Interpolation (Polynomial Spline):**
-```
-1. Extract valid values as (index, value) pairs
-2. Generate polynomial spline interpolation function
-3. Fill null values using interpolation function estimates
-4. Replace out-of-range values with boundary values
-```
+### Administrative-Unit Statistics
 
-**Applications:**
-- Fill missing data in yearly price-per-pyeong history
-- Clean apartment transaction time-series data
-- Generate continuous data for chart visualization
+National data organized into city, district, dong, and parcel units, enabling seamless comparison from wide-area trends to individual parcel review on the same screen.
+
+**Indicators provided**
+- Average official land price, market-vs-appraisal gap
+- Estimated land value, asset density
+- Transaction volume, average sale price, and other market activity indicators
+- Discovery Score, Land Leverage Score, and other proprietary discovery scores
+
+**B2B applications**
+- **Wide-area monitoring**: Trend tracking at the city and district level
+- **Candidate discovery**: Narrowing target regions through dong-level comparison
+- **Individual review**: Connecting to feasibility simulation at the parcel level
+
+→ The same indicator viewed across multiple units lets you analyze macro flow and individual parcels in a single continuous workflow.
 
 ---
 
-## Future Development
+## Data & API Access
 
-- Kubernetes migration for scalability
-- RAG (Retrieval-Augmented Generation) integration for enhanced AI analysis
-- Real-time data streaming pipeline construction
-- Multi-language support (Korean/English)
+The data and capability scope of Rebuild Analytics is summarized below. Certain baseline capabilities are available without separate enrollment; analytic indicators and high-precision market data are offered to **enterprise partners or authenticated users**.
+
+### Baseline Capabilities
+
+- **Geographic search**: Address, parcel, building, and unified search
+- **Parcel basic information**: Per-parcel basic data (prices and scores are masked)
+- **Real transaction summary**: Statistical summary including average price per pyeong (individual transactions withheld)
+- **Renewal zone & urban planning lookup**: Renewal zones, regeneration promotion districts, urban development areas
+- **Regional summary statistics**: Aggregated indicators at the administrative unit level
+
+### Baseline Data Fields
+
+**Parcel basic information**
+- Unique ID, lot number, legal-dong name
+- Area, land category, zoning (primary & secondary)
+- Building coverage ratio, floor area ratio
+- Parcel boundary (geometry)
+- Building type, unit count, price reference year
+
+**Building summary**
+- Structure, floor count, approval date, aging grade
+
+**Transaction summary**
+- Transaction count and average price per pyeong within an area
+
+### Enterprise Partnership / Authenticated Access
+
+The following items are **proprietary analytic indicators** and **high-precision market data**, available only to enterprise partners or authenticated users.
+
+- **Proprietary indicators**: Discovery Score, Land Leverage Score, market-vs-appraisal gap, undervaluation score
+- **MapLayer precision indicators**: Official land price values, asset density, average building age, aged building ratio, average sale price, median land value (at city, district, dong scale)
+- **Precision pricing data**: Estimated land value, sale price per pyeong, jeonse price per pyeong, jeonse-to-sale ratio
+- **Individual transaction details**: Full transaction records within an area
+- **Feasibility simulation output**: Per-scenario profit/loss, contribution ratio, etc.
+- **Report download**: Excel and PDF on-demand
+- **Storage & management**: Search history, favorites
+
+→ For delivery format and pricing options, see the [Engagement Options](#engagement-options) section or reach out for a partnership discussion.
+
+---
+
+## Engagement Options
+
+Rebuild Analytics provides **its data, analytics, and AI assets in multiple delivery formats** beyond the standard web SaaS. Engagement is structured on a partnership basis, tailored to each enterprise's environment and use case.
+
+| Delivery format | Fit for | Description |
+|------|------|------|
+| **Web SaaS** | Reconstruction associations, developers, investment teams, consulting firms (all direct users) | Standard web interface. Map exploration, simulation, and report download on a single screen. |
+| **API license** | Enterprises with their own systems or platforms | Direct integration of data and analytic output into existing systems. Available as **per-call billing** or **monthly/annual contract**. |
+| **MCP server** | Organizations actively using AI/LLM | Natural-language access to our data from Claude Desktop and other LLM clients. Partnership-based licensing. |
+| **AI consultation bot** | Enterprises embedding real estate consultation in their own services | Embed a real estate consultation bot into a company-owned service. Includes data, LLM, and UI as an integrated package. |
+
+**Topics covered in a partnership discussion**
+- Data scope — which regions and indicators, at what refresh cadence
+- API delivery format — per-call usage, monthly/annual contracts, dedicated endpoints
+- Internal system integration — how to connect with existing decision systems, BI tools, or CRMs
+- AI consultation bot scope — embedding location, response domain, user permissions
+
+→ Each engagement is custom-designed on a partnership basis according to scale, scope, and operational mode. Inquiries handled individually.
